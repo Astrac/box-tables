@@ -1,7 +1,6 @@
 package astrac.boxtables
 
 import cats.ContravariantMonoidal
-import cats.syntax.contravariant._
 import shapeless.{Sized, Nat}
 import shapeless.ops.nat.ToInt
 

@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Astrac/box-tables.svg?branch=master)](https://travis-ci.org/Astrac/box-tables)
+
 # Box Tables
 
 A scala library to build customisable, flexible box-drawing tables.

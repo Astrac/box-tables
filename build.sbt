@@ -1,4 +1,15 @@
-scalaVersion in ThisBuild := "2.12.7"
+organization := "astrac"
+name := "box-tables"
+description := "A library to create box-drawing tables"
+licenses += ("Apache-2.0", url("https://opensource.org/licenses/Apache-2.0"))
+
+scalaVersion := "2.12.7"
+
+libraryDependencies ++= Seq(
+  "com.chuusai" %% "shapeless" % "2.3.3",
+  "org.typelevel" %% "cats-core" % "1.4.0",
+  "org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
+)
 
 scalacOptions := Seq(
   "-deprecation", // Emit warning and location for usages of deprecated APIs.
@@ -46,6 +57,7 @@ scalacOptions := Seq(
   "-Ywarn-unused:patvars", // Warn if a variable bound in a pattern is unused.
   "-Ywarn-value-discard" // Warn when non-Unit expression results are unused.
 )
+
 scalacOptions in (Compile, console) ~= (_.filterNot(
   Set(
     "-Ywarn-unused:imports",
@@ -57,9 +69,3 @@ scalacOptions in (Test, console) ~= (_.filterNot(
     "-Ywarn-unused:imports",
     "-Xfatal-warnings"
   )).filterNot(_.contains("paradise")))
-
-libraryDependencies ++= Seq(
-  "com.chuusai" %% "shapeless" % "2.3.3",
-  "org.typelevel" %% "cats-core" % "1.4.0",
-  "org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
-)
