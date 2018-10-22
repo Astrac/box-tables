@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Astrac/box-tables.svg?branch=master)](https://travis-ci.org/Astrac/box-tables)
+[![Build Status](https://travis-ci.org/Astrac/box-tables.svg?branch=master)](https://travis-ci.org/Astrac/box-tables) [![Download](https://api.bintray.com/packages/astrac/maven/box-tables/images/download.svg)](https://bintray.com/astrac/maven/box-tables/_latestVersion)
 
 # Box Tables
 
@@ -6,11 +6,16 @@ A scala library to build customisable, flexible box-drawing tables.
 
 ## Getting started
 
-TODO: bintray
+This is the dependency to get version 0.x from bintray (see badge at the top for the latest version):
+
+```scala
+resolvers += Resolvers.bintray("astrac", "maven")
+libraryDependencies += "astrac" %% "box-tables" % "0.x"
+```
 
 ## Simple example
 
-```
+```scala
 import astrac.boxtables.{BoxTable, Cell, Generic, Row, Sizing, Themes}
 import astrac.boxtables.instances.all._
 import cats.instances.list._
@@ -31,6 +36,9 @@ val users = List(
 
 println(BoxTable.makeString(users, Sizing.Equal(80), Themes.singleLineAscii))
 
+```
+
+```
 // Exiting paste mode, now interpreting.
 
 
@@ -163,6 +171,11 @@ The purpose of the formatter is to bridge from the `String` values extracted by 
 representation of the algebra. The `space` function returns a single blank space and `apply` formats a single `String`
 in a `List` of the target representation. This is where contents that are too long to fit in one cell are split into
 multiple lines.
+
+## BoxTable
+
+The `astrac.boxtables.BoxTable` singleton exposes the functions `algebra` and `makeString` that provide instances
+of `TableAlgebra` where the underlying representation type will be `String`.
 
 ## Themes
 
