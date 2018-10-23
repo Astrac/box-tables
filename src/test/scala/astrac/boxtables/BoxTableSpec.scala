@@ -2,54 +2,18 @@ package astrac.boxtables
 
 import astrac.boxtables.instances.all._
 import cats.instances.list._
-import cats.syntax.contravariantSemigroupal._
-import org.scalacheck.{Gen, Prop, Properties}
+import org.scalacheck.{Gen, Prop}
+import scala.io.Source
+import org.scalacheck.Properties
 
 class BoxTableSpec extends Properties("BoxTable") {
+  case class Counters(visits: Int, transfers: Int)
+  case class User(name: String, age: Int, active: Boolean, counters: Counters)
 
-  val exampleSingleLine =
-    """
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-<<<<↘↓↓↓↓↓↓↓↓↓↓↓↓↓↧↓↓↓↓↓↓↓↓↓↓↓↓↧↓↓↓↓↓↓↓↓↓↓↓↓↧↓↓↓↓↓↓↓↓↓↓↓↓↙>>
-<<<<→vvvvvvvvvvvvv|vvvvvvvvvvvv|vvvvvvvvvvvv|vvvvvvvvvvvv←>>
-<<<<→>>>>foo    <<|>>>>12    <<|>>>>x     <<|>>>>l     <<←>>
-<<<<→^^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^←>>
-<<<<→^^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^←>>
-<<<<→^^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^←>>
-<<<<↦-------------↺------------↺------------↺------------↤>>
-<<<<→vvvvvvvvvvvvv|vvvvvvvvvvvv|vvvvvvvvvvvv|vvvvvvvvvvvv←>>
-<<<<→>>>>bar    <<|>>>>4     <<|>>>>y     <<|>>>>l     <<←>>
-<<<<→^^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^←>>
-<<<<→^^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^←>>
-<<<<→^^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^←>>
-<<<<↗↑↑↑↑↑↑↑↑↑↑↑↑↑↥↑↑↑↑↑↑↑↑↑↑↑↑↥↑↑↑↑↑↑↑↑↑↑↑↑↥↑↑↑↑↑↑↑↑↑↑↑↑↖>>
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-"""
+  implicit val permissionCell: Cell[Counters] =
+    Cell.instance(p => s"Visits: ${p.visits}\nTransfers: ${p.transfers}")
 
-  val exampleMultiLine =
-    """
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-<<<<↘↓↓↓↓↓↓↓↓↓↓↓↓↓↧↓↓↓↓↓↓↓↓↓↓↓↓↧↓↓↓↓↓↓↓↓↓↓↓↓↧↓↓↓↓↓↓↓↓↓↓↓↓↙>>
-<<<<→vvvvvvvvvvvvv|vvvvvvvvvvvv|vvvvvvvvvvvv|vvvvvvvvvvvv←>>
-<<<<→>>>>Lorem i<<|>>>>12    <<|>>>>x     <<|>>>>l     <<←>>
-<<<<→>>>>psum   <<|>>>>      <<|>>>>      <<|>>>>      <<←>>
-<<<<→^^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^←>>
-<<<<→^^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^←>>
-<<<<→^^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^←>>
-<<<<↦-------------↺------------↺------------↺------------↤>>
-<<<<→vvvvvvvvvvvvv|vvvvvvvvvvvv|vvvvvvvvvvvv|vvvvvvvvvvvv←>>
-<<<<→>>>>bar    <<|>>>>4     <<|>>>>Lorem <<|>>>>l     <<←>>
-<<<<→>>>>       <<|>>>>      <<|>>>>ipsum <<|>>>>      <<←>>
-<<<<→^^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^←>>
-<<<<→^^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^←>>
-<<<<→^^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^|^^^^^^^^^^^^←>>
-<<<<↗↑↑↑↑↑↑↑↑↑↑↑↑↑↥↑↑↑↑↑↑↑↑↑↑↑↑↥↑↑↑↑↑↑↑↑↑↑↑↑↥↑↑↑↑↑↑↑↑↑↑↑↑↖>>
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-"""
+  implicit val userRow: Row[User] = Generic[User].derive
 
   val testTheme = Theme[String](
     borders = Sides(t = "↓", b = "↑", l = "→", r = "←"),
@@ -62,35 +26,76 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     intersections = Intersections(l = "↦", r = "↤", t = "↧", b = "↥", c = "↺")
   )
 
-  case class Foo(x: String, y: Int, z: String)
+  // Expects data, empty line and list of examples for that data
+  // separated by blank lines
+  def readExample(name: String): (List[User], List[String]) = {
+    val fileStream = getClass.getResourceAsStream(name)
+    val lines = Source.fromInputStream(fileStream).getLines.toList
+    val data = lines.takeWhile(_.trim.nonEmpty).map {
+      _.split(",").map(_.trim()).toList match {
+        case List(name, age, active, cVisits, cTransfers) =>
+          User(name,
+               age.toInt,
+               active.toBoolean,
+               Counters(cVisits.toInt, cTransfers.toInt))
+      }
+    }
 
-  implicit val fooRow: Row[Foo] =
-    (Row.cell[String], Row.cell[Int], Row.cell[String], Row.cell[String])
-      .contramapN[Foo](f => (f.x, f.y, f.z, "l"))
+    val tables = lines
+      .dropWhile(_.trim.nonEmpty)
+      .mkString("\n")
+      .split("\n\n")
+      .map(_.trim())
+      .toList
 
-  val sizing = Sizing.Equal(60)
-
-  property("TableSize") = Prop.forAllNoShrink(Gen.choose(35, 100)) { w: Int =>
-    val algebra = BoxTable.algebra(Sizing.Equal(w), testTheme)
-    val lines = algebra.table(List(Foo("foo", 12, "x"), Foo("bar", 4, "y")))
-
-    lines.forall(_.size == w)
+    (data, tables)
   }
 
-  property("ThemedTableSingleLine") = {
-    val table = BoxTable
-      .makeString(List(Foo("foo", 12, "x"), Foo("bar", 4, "y")),
-                  sizing,
-                  testTheme)
-      .trim()
+  property("TestThemeEqualSizingExamples") = {
+    val (data, List(t45, t80, t120)) =
+      readExample("/test-theme-equal-sizing.example")
 
-    table == (exampleSingleLine.trim())
+    def makeTable(size: Int) =
+      BoxTable.makeString(data, Sizing.Equal(size), testTheme)
+
+    makeTable(45) == t45 && makeTable(80) == t80 && makeTable(120) == t120
   }
 
-  property("ThemedTableMultiLine") = {
-    val data = List(Foo("Lorem ipsum", 12, "x"), Foo("bar", 4, "Lorem ipsum"))
-    val table = BoxTable.makeString(data, sizing, testTheme).trim()
+  property("TestThemeWeightedSizingExamples") = {
+    val weights = List(3, 1, 1, 4)
 
-    table == (exampleMultiLine.trim())
+    val (data, List(t45, t80, t120)) =
+      readExample("/test-theme-weighted-sizing.example")
+
+    def makeTable(size: Int) =
+      BoxTable.makeString(data, Sizing.Weighted(size, weights), testTheme)
+
+    makeTable(45) == t45 && makeTable(80) == t80 && makeTable(120) == t120
   }
+
+  property("TestThemeFixedSizingExamples") = {
+    val (data, List(t1, t2)) = readExample("/test-theme-fixed-sizing.example")
+
+    val sizes1 = List(20, 3, 3, 30)
+    val sizes2 = List(15, 2, 5, 20)
+
+    def makeTable(sizes: List[Int]) =
+      BoxTable.makeString(data, Sizing.Fixed(sizes), testTheme)
+
+    makeTable(sizes1) == t1 && makeTable(sizes2) == t2
+  }
+
+  property("TableSizeMustBeRespected") =
+    Prop.forAllNoShrink(Gen.choose(35, 100)) { w: Int =>
+      val algebra = BoxTable.algebra(Sizing.Equal(w), testTheme)
+
+      val lines = algebra.table(
+        List(
+          User("Kilgore Trout", 30, true, Counters(18, 35)),
+          User("Billy Pilgrim", 20, false, Counters(5, 7)),
+          User("Mandarax", 3, true, Counters(10, 0))
+        ))
+
+      lines.forall(_.size == w)
+    }
 }

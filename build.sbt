@@ -8,6 +8,7 @@ scalaVersion := "2.12.7"
 libraryDependencies ++= Seq(
   "com.chuusai" %% "shapeless" % "2.3.3",
   "org.typelevel" %% "cats-core" % "1.4.0",
+  "org.typelevel" %% "cats-testkit" % "1.4.0" % "test",
   "org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
 )
 
