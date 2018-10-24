@@ -2,6 +2,7 @@ package astrac.boxtables
 
 import astrac.boxtables.instances.all._
 import cats.instances.list._
+import cats.instances.string._
 import org.scalacheck.{Gen, Prop}
 import scala.io.Source
 import org.scalacheck.Properties
@@ -87,14 +88,16 @@ class BoxTableSpec extends Properties("BoxTable") {
 
   property("TableSizeMustBeRespected") =
     Prop.forAllNoShrink(Gen.choose(35, 100)) { w: Int =>
-      val algebra = BoxTable.algebra(Sizing.Equal(w), testTheme)
+      val algebra = TableAlgebra[User, String]
 
-      val lines = algebra.table(
-        List(
-          User("Kilgore Trout", 30, true, Counters(18, 35)),
-          User("Billy Pilgrim", 20, false, Counters(5, 7)),
-          User("Mandarax", 3, true, Counters(10, 0))
-        ))
+      val lines = algebra
+        .table(
+          List(
+            User("Kilgore Trout", 30, true, Counters(18, 35)),
+            User("Billy Pilgrim", 20, false, Counters(5, 7)),
+            User("Mandarax", 3, true, Counters(10, 0))
+          ))
+        .run(TableConfig(testTheme, Sizing.Equal(w)))
 
       lines.forall(_.size == w)
     }
