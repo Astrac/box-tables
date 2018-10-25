@@ -28,7 +28,11 @@ object Corners {
   def all[T](v: T) = Corners(v, v, v, v)
 }
 
-case class Dividers[T](v: T, h: T)
+case class Dividers[T](h: Option[T], v: Option[T])
+object Dividers {
+  def hv[T](h: T, v: T) = Dividers(Some(h), Some(v))
+  lazy val none = Dividers(None, None)
+}
 
 case class Padding[T](
     space: Spacing,

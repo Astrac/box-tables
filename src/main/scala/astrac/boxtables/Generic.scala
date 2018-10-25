@@ -30,4 +30,6 @@ object Generic {
   }
 
   def apply[A]: Builder[A] = new Builder[A]
+
+  def tupleN[N <: Nat, A](implicit tn: TupleN[N, A]) = new Builder[tn.Tuple]
 }

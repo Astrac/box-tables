@@ -8,15 +8,15 @@ import cats.syntax.foldable._
 import cats.syntax.traverse._
 import Sizing._
 
-trait LineAlgebra[A, T] {
+trait LineAlgebra[T, R] {
   implicit def T: Monoid[T]
   implicit def F: Formatter[T]
-  implicit def R: Row[A]
+  implicit def R: Row[R]
 
-  val sizing: Result[T, Sizing] = Result.sizing
-  val theme: Result[T, Theme[T]] = Result.theme
+  val sizing: Rows[T, Sizing] = Rows.sizing
+  val theme: Rows[T, Theme[T]] = Rows.theme
 
-  def transpose(ls: List[List[T]]): Result[T, List[List[T]]] = {
+  def transpose(ls: List[List[T]]): Rows[T, List[List[T]]] = {
     val w = ls.map(_.size).max
     ls.zipWithIndex
       .traverse {
@@ -26,7 +26,7 @@ trait LineAlgebra[A, T] {
       .map(_.transpose)
   }
 
-  def boundedSpace(w: Int): Result[T, Int] = theme.map { t =>
+  def boundedSpace(w: Int): Rows[T, Int] = theme.map { t =>
     math.max(0,
              w - 2 -
                (R.size - 1) -
@@ -36,13 +36,13 @@ trait LineAlgebra[A, T] {
                t.margins.space.r)
   }
 
-  val cellSpace: Result[T, Int] = sizing.flatMap {
+  val cellSpace: Rows[T, Int] = sizing.flatMap {
     case Equal(t)       => boundedSpace(t)
-    case Fixed(cs)      => Result.pure(cs.sum)
+    case Fixed(cs)      => Rows.pure(cs.sum)
     case Weighted(t, _) => boundedSpace(t)
   }
 
-  def cellWidth(idx: Int): Result[T, Int] =
+  def cellWidth(idx: Int): Rows[T, Int] =
     (sizing, cellSpace).mapN[Int] { (sizing, cellSpace) =>
       val base = sizing match {
         case Equal(_)            => cellSpace / R.size
@@ -60,7 +60,7 @@ trait LineAlgebra[A, T] {
     }
 
   def cell(paddingL: T, paddingR: T, rowsDivider: T)(content: T,
-                                                     index: Int): Result[T, T] =
+                                                     index: Int): Rows[T, T] =
     theme.map { t =>
       val body = T.combineN(paddingL, t.padding.space.l) |+| content
       val pr = T.combineN(paddingR, t.padding.space.r)
@@ -76,7 +76,7 @@ trait LineAlgebra[A, T] {
            rowsDivider: T,
            paddingR: T,
            borderR: T,
-           marginR: T): Result[T, T] = theme.flatMap { t =>
+           marginR: T): Rows[T, T] = theme.flatMap { t =>
     cells.zipWithIndex
       .foldMap((cell(paddingL, paddingR, rowsDivider) _).tupled)
       .map(
@@ -88,17 +88,17 @@ trait LineAlgebra[A, T] {
             T.combineN(marginR, t.margins.space.r))
   }
 
-  def fillCells(f: T): Result[T, List[T]] =
+  def fillCells(f: T): Rows[T, List[T]] =
     (0 until R.size).toList
       .traverse(idx => cellWidth(idx).map(cw => T.combineN(f, cw)))
 
-  def marginLine(f: T): Result[T, T] =
+  def marginLine(f: T): Rows[T, T] =
     fillCells(f).flatMap(line(f, f, f, _, f, f, f, f))
 
   def borderLine(border: T,
                  intersectL: T,
                  intersectM: T,
-                 intersectR: T): Result[T, T] =
+                 intersectR: T): Rows[T, T] =
     (theme, fillCells(border))
       .mapN { (t, cs) =>
         line(t.margins.fill.l,
@@ -112,26 +112,26 @@ trait LineAlgebra[A, T] {
       }
       .flatMap(identity)
 
-  def contentLine(contents: List[T]): Result[T, T] =
+  def contentLine(contents: List[T]): Rows[T, T] =
     theme.flatMap { t =>
       line(t.margins.fill.l,
            t.borders.l,
            t.padding.fill.l,
            contents,
-           t.dividers.v,
+           t.dividers.v.getOrElse(F.space),
            t.padding.fill.r,
            t.borders.r,
            t.margins.fill.r)
     }
 
-  def paddingLine(p: T): Result[T, T] =
+  def paddingLine(p: T): Rows[T, T] =
     (theme, fillCells(p))
       .mapN { (t, cs) =>
         line(t.margins.fill.l,
              t.borders.l,
              p,
              cs,
-             t.dividers.v,
+             t.dividers.v.getOrElse(F.space),
              p,
              t.borders.r,
              t.margins.fill.r)

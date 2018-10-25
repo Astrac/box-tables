@@ -5,6 +5,10 @@ licenses += ("Apache-2.0", url("https://opensource.org/licenses/Apache-2.0"))
 
 scalaVersion := "2.12.7"
 
+resolvers += Resolver.sonatypeRepo("releases")
+
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
+
 libraryDependencies ++= Seq(
   "com.chuusai" %% "shapeless" % "2.3.3",
   "org.typelevel" %% "cats-core" % "1.4.0",

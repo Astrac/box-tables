@@ -8,42 +8,42 @@ import cats.syntax.foldable._
 import cats.syntax.list._
 import cats.syntax.traverse._
 
-trait TableAlgebra[A, T] extends LineAlgebra[A, T] {
+trait TableAlgebra[T, R] extends LineAlgebra[T, R] {
 
-  lazy val topMargin: Result[T, List[T]] = theme.flatMap { t =>
+  lazy val topMargin: Rows[T, List[T]] = theme.flatMap { t =>
     List.fill(t.margins.space.t)(marginLine(t.margins.fill.t)).sequence
   }
 
-  lazy val topBorder: Result[T, List[T]] = theme.flatMap { t =>
+  lazy val topBorder: Rows[T, List[T]] = theme.flatMap { t =>
     borderLine(t.borders.t, t.corners.tl, t.intersections.t, t.corners.tr)
       .map(List(_))
   }
 
-  lazy val rowsDivider: Result[T, List[T]] = theme.flatMap { t =>
-    borderLine(t.dividers.h,
-               t.intersections.l,
-               t.intersections.c,
-               t.intersections.r).map(List(_))
+  lazy val rowsDivider: Rows[T, List[T]] = theme.flatMap { t =>
+    t.dividers.h.fold[Rows[T, List[T]]](Rows.pure(Nil)) { h =>
+      borderLine(h, t.intersections.l, t.intersections.c, t.intersections.r)
+        .map(List(_))
+    }
   }
 
-  lazy val bottomBorder: Result[T, List[T]] = theme.flatMap { t =>
+  lazy val bottomBorder: Rows[T, List[T]] = theme.flatMap { t =>
     borderLine(t.borders.b, t.corners.bl, t.intersections.b, t.corners.br)
       .map(List(_))
   }
 
-  lazy val bottomMargin: Result[T, List[T]] = theme.flatMap { t =>
+  lazy val bottomMargin: Rows[T, List[T]] = theme.flatMap { t =>
     List.fill(t.margins.space.b)(marginLine(t.margins.fill.b)).sequence
   }
 
-  lazy val paddingTop: Result[T, List[T]] = theme.flatMap { t =>
+  lazy val paddingTop: Rows[T, List[T]] = theme.flatMap { t =>
     List.fill(t.padding.space.t)(paddingLine(t.padding.fill.t)).sequence
   }
 
-  lazy val paddingBottom: Result[T, List[T]] = theme.flatMap { t =>
+  lazy val paddingBottom: Rows[T, List[T]] = theme.flatMap { t =>
     List.fill(t.padding.space.b)(paddingLine(t.padding.fill.b)).sequence
   }
 
-  def row(a: A): Result[T, List[T]] = {
+  def row(a: R): Rows[T, List[T]] = {
     val contents = R.toRow(a)
 
     val contentLines = contents.zipWithIndex
@@ -58,26 +58,26 @@ trait TableAlgebra[A, T] extends LineAlgebra[A, T] {
 
   lazy val tableStart = topMargin |+| topBorder
 
-  def rows[F[_]: Foldable](as: F[A]): Result[T, List[T]] =
+  def rows[F[_]: Foldable](as: F[R]): Rows[T, List[T]] =
     as.foldMap(a => row(a) |+| rowsDivider)
       .map(_.toNel
         .fold(List.empty[T])(_.init))
 
   lazy val tableEnd = bottomBorder |+| bottomMargin
 
-  def table[F[_]: Foldable](as: F[A]): Result[T, List[T]] =
+  def table[F[_]: Foldable](as: F[R]): Rows[T, List[T]] =
     tableStart |+| rows(as) |+| tableEnd
 }
 
 object TableAlgebra {
-  implicit def instance[A, T](implicit monoid: Monoid[T],
+  implicit def instance[T, R](implicit monoid: Monoid[T],
                               formatter: Formatter[T],
-                              aRow: Row[A]): TableAlgebra[A, T] =
-    new TableAlgebra[A, T] {
+                              aRow: Row[R]): TableAlgebra[T, R] =
+    new TableAlgebra[T, R] {
       implicit val T = monoid
       implicit val F = formatter
       implicit val R = aRow
     }
 
-  def apply[A, T](implicit t: TableAlgebra[A, T]): TableAlgebra[A, T] = t
+  def apply[R, T](implicit t: TableAlgebra[R, T]): TableAlgebra[R, T] = t
 }

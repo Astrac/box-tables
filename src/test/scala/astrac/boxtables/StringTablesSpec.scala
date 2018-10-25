@@ -3,11 +3,13 @@ package astrac.boxtables
 import astrac.boxtables.instances.all._
 import cats.instances.list._
 import cats.instances.string._
+import cats.syntax.contravariantSemigroupal._
 import org.scalacheck.{Gen, Prop}
 import scala.io.Source
 import org.scalacheck.Properties
+import shapeless.Nat
 
-class BoxTableSpec extends Properties("BoxTable") {
+class StringTablesSpec extends Properties("StringTables") {
   case class Counters(visits: Int, transfers: Int)
   case class User(name: String, age: Int, active: Boolean, counters: Counters)
 
@@ -19,7 +21,7 @@ class BoxTableSpec extends Properties("BoxTable") {
   val testTheme = Theme[String](
     borders = Sides(t = "↓", b = "↑", l = "→", r = "←"),
     corners = Corners(tl = "↘", tr = "↙", bl = "↗", br = "↖"),
-    dividers = Dividers(v = "|", h = "-"),
+    dividers = Dividers.hv(v = "|", h = "-"),
     padding = Padding(space = Spacing(1, 2, 3, 4),
                       fill = Sides(t = "v", b = "^", l = ">", r = "<")),
     margins = Margins(space = Spacing(1, 2, 3, 4),
@@ -52,43 +54,58 @@ class BoxTableSpec extends Properties("BoxTable") {
     (data, tables)
   }
 
-  property("TestThemeEqualSizingExamples") = {
+  property("TestThemeEqualSizing") = {
     val (data, List(t45, t80, t120)) =
       readExample("/test-theme-equal-sizing.example")
 
     def makeTable(size: Int) =
-      BoxTable.makeString(data, Sizing.Equal(size), testTheme)
+      StringTables.simple(data, Sizing.Equal(size), testTheme)
 
     makeTable(45) == t45 && makeTable(80) == t80 && makeTable(120) == t120
   }
 
-  property("TestThemeWeightedSizingExamples") = {
+  property("TestThemeWeightedSizing") = {
     val weights = List(3, 1, 1, 4)
 
     val (data, List(t45, t80, t120)) =
       readExample("/test-theme-weighted-sizing.example")
 
     def makeTable(size: Int) =
-      BoxTable.makeString(data, Sizing.Weighted(size, weights), testTheme)
+      StringTables.simple(data, Sizing.Weighted(size, weights), testTheme)
 
     makeTable(45) == t45 && makeTable(80) == t80 && makeTable(120) == t120
   }
 
-  property("TestThemeFixedSizingExamples") = {
+  property("TestThemeFixedSizing") = {
     val (data, List(t1, t2)) = readExample("/test-theme-fixed-sizing.example")
 
     val sizes1 = List(20, 3, 3, 30)
     val sizes2 = List(15, 2, 5, 20)
 
     def makeTable(sizes: List[Int]) =
-      BoxTable.makeString(data, Sizing.Fixed(sizes), testTheme)
+      StringTables.simple(data, Sizing.Fixed(sizes), testTheme)
 
     makeTable(sizes1) == t1 && makeTable(sizes2) == t2
   }
 
+  property("Markdown") = {
+    val (data, List(t)) =
+      readExample("/markdown.example")
+
+    implicit val headerRow = Generic.tupleN[Nat._3, String].derive
+
+    implicit val userRow: Row[User] =
+      (Row.cell[String], Row.cell[Int], Row.cell[Boolean]).contramapN[User](u =>
+        (u.name, u.age, u.active))
+
+    StringTables
+      .markdown(("Name", "Age", "Active"), data)
+      .trim() == t
+  }
+
   property("TableSizeMustBeRespected") =
     Prop.forAllNoShrink(Gen.choose(35, 100)) { w: Int =>
-      val algebra = TableAlgebra[User, String]
+      val algebra = TableAlgebra[String, User]
 
       val lines = algebra
         .table(
@@ -97,7 +114,7 @@ class BoxTableSpec extends Properties("BoxTable") {
             User("Billy Pilgrim", 20, false, Counters(5, 7)),
             User("Mandarax", 3, true, Counters(10, 0))
           ))
-        .run(TableConfig(testTheme, Sizing.Equal(w)))
+        .run(RowsConfig(testTheme, Sizing.Equal(w)))
 
       lines.forall(_.size == w)
     }
