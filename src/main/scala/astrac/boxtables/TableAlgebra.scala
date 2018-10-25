@@ -58,10 +58,11 @@ trait TableAlgebra[T, R] extends LineAlgebra[T, R] {
 
   lazy val tableStart = topMargin |+| topBorder
 
-  def rows[F[_]: Foldable](as: F[R]): Rows[T, List[T]] =
+  def rows[F[_]: Foldable](as: F[R]): Rows[T, List[T]] = theme.flatMap { t =>
     as.foldMap(a => row(a) |+| rowsDivider)
       .map(_.toNel
-        .fold(List.empty[T])(_.init))
+        .fold(List.empty[T])(l => t.dividers.h.fold(l.toList)(_ => l.init)))
+  }
 
   lazy val tableEnd = bottomBorder |+| bottomMargin
 

@@ -16,9 +16,10 @@ libraryDependencies += "astrac" %% "box-tables" % "0.x"
 ## Simple example
 
 ```scala
-import astrac.boxtables.{BoxTable, Cell, Generic, Row, Sizing, Themes}
+import astrac.boxtables.{AutoRow, Cell, Row, Sizing, StringTables, Themes}
 import astrac.boxtables.instances.all._
 import cats.instances.list._
+import cats.instances.string._
 
 case class Counters(visits: Int, transfers: Int)
 case class User(name: String, age: Int, active: Boolean, counters: Counters)
@@ -26,7 +27,7 @@ case class User(name: String, age: Int, active: Boolean, counters: Counters)
 implicit val permissionCell: Cell[Counters] =
   Cell.instance(p => s"Visits: ${p.visits}\nTransfers: ${p.transfers}")
 
-implicit val userRow: Row[User] = Generic[User].derive
+implicit val userRow: Row[User] = AutoRow[User]
 
 val users = List(
   User("Kilgore Trout", 30, true, Counters(18, 35)),
@@ -34,8 +35,7 @@ val users = List(
   User("Mandarax", 3, true, Counters(10, 0))
 )
 
-println(BoxTable.makeString(users, Sizing.Equal(80), Themes.singleLineAscii))
-
+println(StringTables.simple(users, Sizing.Equal(80), Themes.singleLineAscii))
 ```
 
 ```
@@ -94,7 +94,7 @@ sealed trait Row[A] {
 It is possible to create instances in several ways:
 
 ```scala
-import astrac.boxtables.{Generic, Row}
+import astrac.boxtables.{AutoRow, Row}
 import astrac.boxtables.instances.primitive._
 import shapeless.Sized
 
@@ -104,7 +104,7 @@ case class Foo(x: String, y: Int)
 val rowFoo: Row[Foo] = Row.instance(foo => Sized[List](foo.x, foo.y.toString))
 
 // Shapeless auto-derivation for case-classes
-val rowFoo: Row[Foo] = Generic[Row].derive
+val rowFoo: Row[Foo] = AutoRow[Row]
 
 // Lifting a (implicit) `Cell` instance into a single-column `Row`
 val rowString: Row[String] = Row.cell
@@ -123,6 +123,16 @@ val rowFoo: Row[Foo] =
   (Row.cell[String], Row.cell[Int], Row.cell[Boolean]).contramapN[Foo] { foo =>
     (foo.x, foo.y, foo.y > 0)
   }
+```
+
+Finally it is also possible to enable full automatic derivation for tuples and case classes:
+
+```scala
+import astarc.boxtables.AutoRow.instances._
+
+val data: List[SomeCaseClass] = ...
+
+println(StringTables.simple(data, Sizing.Equal(80), Themes.singleLineAscii))
 ```
 
 ## Sizing
@@ -148,10 +158,12 @@ The algebra that implement the table creation is not bound to `String` but can w
 this is its definition:
 
 ```scala
-class TableAlgebra[A, T](config: Theme[T], sizing: Sizing)(
-    implicit T: Monoid[T],
-    F: Formatter[T],
-    R: Row[A]) {
+trait TableAlgebra[A, T] {
+  implicit def T: Monoid[T]
+  implicit def F: Formatter[T]
+  implicit def R: Row[A]
+  ...
+}
 ```
 
 This exposes functions that allow to create components from the table or a table altogether (`algebra.table(data)`);
@@ -172,10 +184,53 @@ representation of the algebra. The `space` function returns a single blank space
 in a `List` of the target representation. This is where contents that are too long to fit in one cell are split into
 multiple lines.
 
-## BoxTable
+## StringTables
 
-The `astrac.boxtables.BoxTable` singleton exposes the functions `algebra` and `makeString` that provide instances
-of `TableAlgebra` where the underlying representation type will be `String`.
+The `astrac.boxtables.StringTables` singleton exposes the functions to create several types of commonly used tables:
+
+- `simple` - A table with no headers or footers
+- `withHeader`
+- `withFooter`
+- `withHeaderAndFooter`
+- `markdown`
+
+When creating tables with headers and footers different themes can be defined for each part of the table using the `TableConfig[T]` case class; if not specified, header and footer configurations will default to the main theme.
+
+## Markdown tables generation
+
+`StringTables.markdown` will generate a markdown table from the provided data. Please note that since content-based table sizing is not yet implemented it is the user's responsibility to configure column sizing so that cells do not overflow on a new line. By default the function will provide evenly distributed columns for a 80 characters wide table. This is an example of usage:
+
+```scala
+import astrac.boxtables.{AutoRow, StringTables}
+import astrac.boxtables.instances.all._
+import AutoRow.instances._
+import cats.instances.list._
+import cats.instances.string._
+
+case class Book(title: String, author: String)
+
+println(StringTables.markdown(
+  ("Title", "Author"),
+  List(
+    Book("The Three Body Problem", "Cixin Liu"),
+    Book("Foundation", "Isaac Asimov"))))
+```
+
+```
+// Exiting paste mode, now interpreting.
+
+| Title                                 | Author                               |
+|---------------------------------------|--------------------------------------|
+| The Three Body Problem                | Cixin Liu                            |
+| Foundation                            | Isaac Asimov                         |
+```
+
+Which renders on GitHub as:
+
+| Title                                 | Author                               |
+|---------------------------------------|--------------------------------------|
+| The Three Body Problem                | Cixin Liu                            |
+| Foundation                            | Isaac Asimov                         |
 
 ## Themes
 
@@ -186,6 +241,8 @@ A few themes are available in the `astrac.boxtables.Themes` object:
 * `singleLineAscii` - See above
 * `unicodeFrame` - Uses nicer characters and adds a light shade in the margins
 * `simple` - Uses only `+`, `|`, and `-`, no paddings/margins
+* `markdownHeader` - Used for the header cells and divider in markdown tables
+* `markdownMain` - Used for the body of markdown tables
 
 Themes are fully customisable, this is an example of theme definition:
 
