@@ -5,4 +5,5 @@ import cats.data.Reader
 package object boxtables {
   type Rows[T, R] = Reader[RowsConfig[T], R]
   type Template[T] = Reader[TableConfig[T], List[T]]
+  def discard[T]: T => Unit = _ => ()
 }

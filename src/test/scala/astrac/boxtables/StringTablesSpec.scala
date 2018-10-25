@@ -7,7 +7,6 @@ import cats.syntax.contravariantSemigroupal._
 import org.scalacheck.{Gen, Prop}
 import scala.io.Source
 import org.scalacheck.Properties
-import shapeless.Nat
 
 class StringTablesSpec extends Properties("StringTables") {
   case class Counters(visits: Int, transfers: Int)
@@ -16,7 +15,7 @@ class StringTablesSpec extends Properties("StringTables") {
   implicit val permissionCell: Cell[Counters] =
     Cell.instance(p => s"Visits: ${p.visits}\nTransfers: ${p.transfers}")
 
-  implicit val userRow: Row[User] = Generic[User].derive
+  implicit val userRow: Row[User] = AutoRow[User]
 
   val testTheme = Theme[String](
     borders = Sides(t = "↓", b = "↑", l = "→", r = "←"),
@@ -29,20 +28,14 @@ class StringTablesSpec extends Properties("StringTables") {
     intersections = Intersections(l = "↦", r = "↤", t = "↧", b = "↥", c = "↺")
   )
 
-  // Expects data, empty line and list of examples for that data
-  // separated by blank lines
-  def readExample(name: String): (List[User], List[String]) = {
+  def readExampleGeneric[A](name: String)(
+      f: List[String] => A): (List[A], List[String]) = {
     val fileStream = getClass.getResourceAsStream(name)
     val lines = Source.fromInputStream(fileStream).getLines.toList
-    val data = lines.takeWhile(_.trim.nonEmpty).map {
-      _.split(",").map(_.trim()).toList match {
-        case List(name, age, active, cVisits, cTransfers) =>
-          User(name,
-               age.toInt,
-               active.toBoolean,
-               Counters(cVisits.toInt, cTransfers.toInt))
-      }
-    }
+    val data = lines
+      .takeWhile(_.trim.nonEmpty)
+      .map(_.split(",").map(_.trim()).toList)
+      .map(f)
 
     val tables = lines
       .dropWhile(_.trim.nonEmpty)
@@ -54,9 +47,20 @@ class StringTablesSpec extends Properties("StringTables") {
     (data, tables)
   }
 
+  // Expects data, empty line and list of examples for that data
+  // separated by blank lines
+  def readExampleUser(name: String): (List[User], List[String]) =
+    readExampleGeneric(name) {
+      case List(name, age, active, cVisits, cTransfers) =>
+        User(name,
+             age.toInt,
+             active.toBoolean,
+             Counters(cVisits.toInt, cTransfers.toInt))
+    }
+
   property("TestThemeEqualSizing") = {
     val (data, List(t45, t80, t120)) =
-      readExample("/test-theme-equal-sizing.example")
+      readExampleUser("/test-theme-equal-sizing.example")
 
     def makeTable(size: Int) =
       StringTables.simple(data, Sizing.Equal(size), testTheme)
@@ -68,7 +72,7 @@ class StringTablesSpec extends Properties("StringTables") {
     val weights = List(3, 1, 1, 4)
 
     val (data, List(t45, t80, t120)) =
-      readExample("/test-theme-weighted-sizing.example")
+      readExampleUser("/test-theme-weighted-sizing.example")
 
     def makeTable(size: Int) =
       StringTables.simple(data, Sizing.Weighted(size, weights), testTheme)
@@ -77,7 +81,8 @@ class StringTablesSpec extends Properties("StringTables") {
   }
 
   property("TestThemeFixedSizing") = {
-    val (data, List(t1, t2)) = readExample("/test-theme-fixed-sizing.example")
+    val (data, List(t1, t2)) = readExampleUser(
+      "/test-theme-fixed-sizing.example")
 
     val sizes1 = List(20, 3, 3, 30)
     val sizes2 = List(15, 2, 5, 20)
@@ -90,9 +95,9 @@ class StringTablesSpec extends Properties("StringTables") {
 
   property("Markdown") = {
     val (data, List(t)) =
-      readExample("/markdown.example")
+      readExampleUser("/markdown.example")
 
-    implicit val headerRow = Generic.tupleN[Nat._3, String].derive
+    implicit val headerRow: Row[(String, String, String)] = AutoRow.derive
 
     implicit val userRow: Row[User] =
       (Row.cell[String], Row.cell[Int], Row.cell[Boolean]).contramapN[User](u =>
@@ -101,6 +106,20 @@ class StringTablesSpec extends Properties("StringTables") {
     StringTables
       .markdown(("Name", "Age", "Active"), data)
       .trim() == t
+  }
+
+  property("AutoInstances") = {
+    import AutoRow.instances._
+
+    case class Book(title: String, author: String)
+
+    val (data, t) = readExampleGeneric("/auto.example") {
+      case List(title, author) => Book(title, author)
+    }
+
+    StringTables
+      .markdown(("Title", "Author"), data)
+      .trim() == t.mkString("\n")
   }
 
   property("TableSizeMustBeRespected") =

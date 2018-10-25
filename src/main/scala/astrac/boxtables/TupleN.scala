@@ -9,6 +9,8 @@ trait TupleN[N <: Nat, A] {
 }
 
 object TupleN {
+  type Aux[N <: Nat, A, _Tuple] = TupleN[N, A] { type Tuple = _Tuple }
+
   implicit def instance[N <: Nat, A, H <: HList](
       implicit fill: Fill.Aux[N, A, H],
       tupler: Tupler[H]
