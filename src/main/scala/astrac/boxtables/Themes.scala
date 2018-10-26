@@ -42,7 +42,7 @@ object Themes {
 
   val blankCompact = blank.copy(
     padding = blank.padding.copy(space = Spacing.zero),
-    margins = blank.margins.copy(space = Spacing.zero),
+    margins = blank.margins.copy(space = Spacing.zero)
   )
 
   val markdownHeader = Theme[String](

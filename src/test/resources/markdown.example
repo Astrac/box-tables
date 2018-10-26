@@ -1,9 +1,0 @@
-Kilgore Trout, 30, true, 18, 35
-Billy Pilgrim, 20, false, 5, 7
-Mandarax, 3, true, 10, 0
-
-| Name                     | Age                     | Active                  |
-|--------------------------|-------------------------|-------------------------|
-| Kilgore Trout            | 30                      | true                    |
-| Billy Pilgrim            | 20                      | false                   |
-| Mandarax                 | 3                       | true                    |

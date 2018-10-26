@@ -46,7 +46,7 @@ object AutoRow {
                                   s: Length.Aux[S, N],
                                   i: ToInt[N]): AutoRow[A] =
     new AutoRow[A] {
-      val row = Row.unsafe(i(), { a =>
+      val row = Row.unsafe(i(), { a: A =>
         discard(s)
         g.to(a).zip(c.instances).map(mapper).toList
       })
