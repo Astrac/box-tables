@@ -14,11 +14,11 @@ object Examples {
     "/test-theme-fixed-sizing.example" -> fixedSizing
   )
 
-  val auto = (
-    """The Three Body Problem, Cixin Liu
+  val auto =
+    ("""The Three Body Problem, Cixin Liu
       |The Stars My Destination, Alfred Bester
       |Foundation, Isaac Asimov""".stripMargin,
-    """|| Title                                 | Author                               |
+     """|| Title                                 | Author                               |
        ||---------------------------------------|--------------------------------------|
        || The Three Body Problem                | Cixin Liu                            |
        || The Stars My Destination              | Alfred Bester                        |

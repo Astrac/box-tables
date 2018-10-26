@@ -7,7 +7,8 @@ lazy val boxTables = crossProject(JSPlatform, JVMPlatform)
     organization := "astrac",
     name := "box-tables",
     description := "A library to create box-drawing tables",
-    licenses += ("Apache-2.0", url("https://opensource.org/licenses/Apache-2.0")),
+    licenses += ("Apache-2.0", url(
+      "https://opensource.org/licenses/Apache-2.0")),
     scalaVersion := "2.12.7",
     resolvers += Resolver.sonatypeRepo("releases"),
     addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8"),
@@ -73,14 +74,15 @@ lazy val boxTables = crossProject(JSPlatform, JVMPlatform)
         "-Ywarn-unused:imports",
         "-Xfatal-warnings"
       )).filterNot(_.contains("paradise")))
-  ).jsSettings(
+  )
+  .jsSettings(
     libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-M13"
   )
 
 lazy val boxTablesJS = boxTables.js
 lazy val boxTablesJVM = boxTables.jvm
 
-lazy val root =project
+lazy val root = project
   .aggregate(boxTablesJS, boxTablesJVM)
 
 test := (root / Test / test).value

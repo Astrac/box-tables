@@ -4,23 +4,6 @@ import shapeless.{::, Generic => SGeneric, HList, HNil, Nat, Poly1}
 import shapeless.ops.hlist.{Length, LiftAll, Mapper, ToList, Zip}
 import shapeless.ops.nat.ToInt
 
-trait AutoRowTupleN[N <: Nat, A] {
-  type Tuple
-  def row: Row[Tuple]
-}
-
-object AutoRowTupleN {
-  implicit def instance[N <: Nat, A, _Tuple](
-      implicit tn: TupleN.Aux[N, A, _Tuple],
-      autoRow: AutoRow[_Tuple]
-  ): AutoRowTupleN[N, A] =
-    new AutoRowTupleN[N, A] {
-      println(tn)
-      type Tuple = _Tuple
-      val row = autoRow.row
-    }
-}
-
 trait AutoRow[A] {
   def row: Row[A]
 }

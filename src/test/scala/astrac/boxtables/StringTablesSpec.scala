@@ -31,7 +31,8 @@ class StringTablesSpec extends Properties("StringTables") {
       f: List[String] => A): (List[A], List[String]) = {
     val (dataLines, tableLines) = Examples(name)
     val data = dataLines
-      .split("\n").toList
+      .split("\n")
+      .toList
       .map(_.split(",").map(_.trim()).toList)
       .map(f)
 
