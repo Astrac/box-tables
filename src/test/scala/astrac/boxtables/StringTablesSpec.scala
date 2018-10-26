@@ -5,7 +5,6 @@ import cats.instances.list._
 import cats.instances.string._
 import cats.syntax.contravariantSemigroupal._
 import org.scalacheck.{Gen, Prop}
-import scala.io.Source
 import org.scalacheck.Properties
 
 class StringTablesSpec extends Properties("StringTables") {
@@ -30,16 +29,13 @@ class StringTablesSpec extends Properties("StringTables") {
 
   def readExampleGeneric[A](name: String)(
       f: List[String] => A): (List[A], List[String]) = {
-    val fileStream = getClass.getResourceAsStream(name)
-    val lines = Source.fromInputStream(fileStream).getLines.toList
-    val data = lines
-      .takeWhile(_.trim.nonEmpty)
+    val (dataLines, tableLines) = Examples(name)
+    val data = dataLines
+      .split("\n").toList
       .map(_.split(",").map(_.trim()).toList)
       .map(f)
 
-    val tables = lines
-      .dropWhile(_.trim.nonEmpty)
-      .mkString("\n")
+    val tables = tableLines
       .split("\n\n")
       .map(_.trim())
       .toList
