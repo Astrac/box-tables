@@ -158,7 +158,7 @@ val size = Sizing.Weighted(80, List(1, 1, 3, 5))
 val size = Sizing.Fixed(List(20, 60, 10))
 ```
 
-## Algebra and Formatters
+## Algebra
 
 The algebra that implement the table creation is not bound to `String` but can
 work with any type that defines a `Monoid`; this is its definition:
@@ -175,6 +175,9 @@ This exposes functions that allow to create components from the table or a table
 altogether (`algebra.table(data)`); all these functions are not specifically
 bound work on `String` but any type could be used as long as there is a `Monoid`
 available for that type (e.g. a `String` with additional styling information).
+
+Facades to the algebra are provided in the `astrac.boxtables.string` package
+to facilitate the generation of string-backed tables.
 
 ## Formatters
 
@@ -199,6 +202,8 @@ far and they can only be applied to the table as a whole:
 
 * `Formatter.basic` - Simply breaks the string so that it fits the space
 * `Formatter.withWordBoundaries` - Simple algorithm that preserves words
+
+The default formatter when calling functions in the `Tables` object is `basic`.
 
 ## The `string` package
 
@@ -266,7 +271,10 @@ A few themes are available in the `astrac.boxtables.Themes` object:
 
 * `blank` - No borders, single character paddings and margins
 * `blankCompact` - Same as `blank` with no paddings/margins
-* `singleLineAscii` - See above
+* `singleLineAscii` - See example at the top of the README
+* `doubleLineAscii` - Same as `singleLineAscii` but using `║`, `═`, ...
+* `doubleVSingleHAscii` - Mix of sigle and double lines (double for verticals)
+* `singleVDoubleHAscii` - Mix of sigle and double lines (double for horizontals)
 * `unicodeFrame` - Uses nicer characters and adds a light shade in the margins
 * `simple` - Uses only `+`, `|`, and `-`, no paddings/margins
 * `markdownHeader` - Used for the header cells and divider in markdown tables

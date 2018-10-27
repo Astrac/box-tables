@@ -18,9 +18,33 @@ object Themes {
     padding = Padding(space = Spacing.all(1), fill = Sides.all(" ")),
     margins = Margins(space = Spacing.all(1), fill = Sides.all(" ")),
     intersections = Intersections(l = "├", r = "┤", b = "┴", t = "┬", c = "┼")
-    // B            ╡   ╢   ╖   ╕   ╣   ║   ╗   ╝   ╜   ╛
-    //   C              ╞   ╟   ╚   ╔   ╩   ╦   ╠   ═   ╬   ╧
-    //   D  ╨   ╤   ╥   ╙   ╘   ╒   ╓   ╫   ╪
+  )
+
+  val doubleLineAscii = Theme[String](
+    borders = Sides.hv(h = "║", v = "═"),
+    corners = Corners(tl = "╔", tr = "╗", bl = "╚", br = "╝"),
+    dividers = Dividers.hv(v = "║", h = "═"),
+    padding = Padding(space = Spacing.all(1), fill = Sides.all(" ")),
+    margins = Margins(space = Spacing.all(1), fill = Sides.all(" ")),
+    intersections = Intersections(l = "╠", r = "╣", b = "╩", t = "╦", c = "╬")
+  )
+
+  val doubleVSingleHAscii = Theme[String](
+    borders = Sides.hv(h = "║", v = "─"),
+    corners = Corners(tl = "╓", tr = "╖", bl = "╙", br = "╜"),
+    dividers = Dividers.hv(v = "║", h = "─"),
+    padding = Padding(space = Spacing.all(1), fill = Sides.all(" ")),
+    margins = Margins(space = Spacing.all(1), fill = Sides.all(" ")),
+    intersections = Intersections(l = "╟", r = "╢", b = "╨", t = "╥", c = "╫")
+  )
+
+  val singleVDoubleHAscii = Theme[String](
+    borders = Sides.hv(h = "│", v = "═"),
+    corners = Corners(tl = "╒", tr = "╕", bl = "╘", br = "╛"),
+    dividers = Dividers.hv(v = "│", h = "═"),
+    padding = Padding(space = Spacing.all(1), fill = Sides.all(" ")),
+    margins = Margins(space = Spacing.all(1), fill = Sides.all(" ")),
+    intersections = Intersections(l = "╞", r = "╡", b = "╧", t = "╤", c = "╪")
   )
 
   val unicodeFrame = Theme[String](
