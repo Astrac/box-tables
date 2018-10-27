@@ -1,4 +1,5 @@
 package astrac.boxtables
+package string
 
 object Themes {
   val simple = Theme[String](

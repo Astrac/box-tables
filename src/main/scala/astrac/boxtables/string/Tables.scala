@@ -1,13 +1,15 @@
 package astrac.boxtables
+package string
 
 import cats.Foldable
+import astrac.boxtables.algebra.{Table, Templates}
 
-object StringTables {
+object Tables {
 
   def simple[F[_]: Foldable, Model](data: F[Model],
                                     sizing: Sizing,
                                     theme: Theme[String])(
-      implicit algebra: TableAlgebra[String, Model]
+      implicit algebra: Table[String, Model]
   ): String =
     Templates
       .simple(data)
@@ -18,8 +20,8 @@ object StringTables {
       h: Header,
       as: F[Model],
       tableConfig: TableConfig[String])(
-      implicit hAlgebra: TableAlgebra[String, Header],
-      rAlgebra: TableAlgebra[String, Model]
+      implicit hAlgebra: Table[String, Header],
+      rAlgebra: Table[String, Model]
   ): String =
     Templates
       .withHeader(h, as)
@@ -30,8 +32,8 @@ object StringTables {
       as: F[Model],
       f: Footer,
       tableConfig: TableConfig[String])(
-      implicit rAlgebra: TableAlgebra[String, Model],
-      fAlgebra: TableAlgebra[String, Footer]
+      implicit rAlgebra: Table[String, Model],
+      fAlgebra: Table[String, Footer]
   ): String =
     Templates
       .withFooter(as, f)
@@ -43,9 +45,9 @@ object StringTables {
       as: F[Model],
       f: Footer,
       tableConfig: TableConfig[String])(
-      implicit hAlgebra: TableAlgebra[String, Header],
-      rAlgebra: TableAlgebra[String, Model],
-      fAlgebra: TableAlgebra[String, Footer]
+      implicit hAlgebra: Table[String, Header],
+      rAlgebra: Table[String, Model],
+      fAlgebra: Table[String, Footer]
   ): String =
     Templates
       .withHeaderAndFooter(h, as, f)
@@ -56,8 +58,8 @@ object StringTables {
       h: Header,
       as: F[Model],
       sizing: Sizing = Sizing.Equal(80))(
-      implicit hAlgebra: TableAlgebra[String, Header],
-      rAlgebra: TableAlgebra[String, Model]): String =
+      implicit hAlgebra: Table[String, Header],
+      rAlgebra: Table[String, Model]): String =
     withHeader(
       h,
       as,

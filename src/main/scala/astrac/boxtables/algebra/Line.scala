@@ -1,4 +1,5 @@
 package astrac.boxtables
+package algebra
 
 import cats.kernel.Monoid
 import cats.instances.list._
@@ -8,7 +9,7 @@ import cats.syntax.foldable._
 import cats.syntax.traverse._
 import Sizing._
 
-trait LineAlgebra[Primitive, Model] {
+trait Line[Primitive, Model] {
   implicit def Primitive: Monoid[Primitive]
   implicit def F: Formatter[Primitive]
   implicit def Model: Row[Model]

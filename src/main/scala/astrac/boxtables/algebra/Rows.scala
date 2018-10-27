@@ -1,4 +1,5 @@
 package astrac.boxtables
+package algebra
 
 import cats.data.Reader
 

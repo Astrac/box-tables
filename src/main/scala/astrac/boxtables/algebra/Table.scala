@@ -1,4 +1,5 @@
 package astrac.boxtables
+package algebra
 
 import cats.Foldable
 import cats.instances.list._
@@ -8,7 +9,7 @@ import cats.syntax.foldable._
 import cats.syntax.list._
 import cats.syntax.traverse._
 
-trait TableAlgebra[Primitive, Model] extends LineAlgebra[Primitive, Model] {
+trait Table[Primitive, Model] extends Line[Primitive, Model] {
 
   lazy val topMargin: Rows[Primitive, List[Primitive]] = theme.flatMap { t =>
     List.fill(t.margins.space.t)(marginLine(t.margins.fill.t)).sequence
@@ -73,17 +74,18 @@ trait TableAlgebra[Primitive, Model] extends LineAlgebra[Primitive, Model] {
     tableStart |+| rows(as) |+| tableEnd
 }
 
-object TableAlgebra {
+object Table {
   implicit def instance[Primitive, Model](
       implicit monoid: Monoid[Primitive],
       formatter: Formatter[Primitive],
-      modelRow: Row[Model]): TableAlgebra[Primitive, Model] =
-    new TableAlgebra[Primitive, Model] {
+      modelRow: Row[Model]): Table[Primitive, Model] =
+    new Table[Primitive, Model] {
       implicit val Primitive = monoid
       implicit val F = formatter
       implicit val Model = modelRow
     }
 
-  def apply[Model, Primitive](implicit algebra: TableAlgebra[Model, Primitive])
-    : TableAlgebra[Model, Primitive] = algebra
+  def apply[Model, Primitive](
+      implicit algebra: Table[Model, Primitive]): Table[Model, Primitive] =
+    algebra
 }

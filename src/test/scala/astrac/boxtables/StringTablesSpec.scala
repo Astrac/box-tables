@@ -1,5 +1,7 @@
 package astrac.boxtables
 
+import astrac.boxtables.algebra.Table
+import astrac.boxtables.string.Tables
 import astrac.boxtables.instances.all._
 import cats.instances.list._
 import cats.instances.string._
@@ -7,7 +9,7 @@ import cats.syntax.contravariantSemigroupal._
 import org.scalacheck.{Gen, Prop}
 import org.scalacheck.Properties
 
-class StringTablesSpec extends Properties("StringTables") {
+class StringTablesSpec extends Properties("Tables") {
   case class Counters(visits: Int, transfers: Int)
   case class User(name: String, age: Int, active: Boolean, counters: Counters)
 
@@ -60,7 +62,7 @@ class StringTablesSpec extends Properties("StringTables") {
       readExampleUser("/test-theme-equal-sizing.example")
 
     def makeTable(size: Int) =
-      StringTables.simple(data, Sizing.Equal(size), testTheme)
+      Tables.simple(data, Sizing.Equal(size), testTheme)
 
     makeTable(45) == t45 && makeTable(80) == t80 && makeTable(120) == t120
   }
@@ -72,7 +74,7 @@ class StringTablesSpec extends Properties("StringTables") {
       readExampleUser("/test-theme-weighted-sizing.example")
 
     def makeTable(size: Int) =
-      StringTables.simple(data, Sizing.Weighted(size, weights), testTheme)
+      Tables.simple(data, Sizing.Weighted(size, weights), testTheme)
 
     makeTable(45) == t45 && makeTable(80) == t80 && makeTable(120) == t120
   }
@@ -85,7 +87,7 @@ class StringTablesSpec extends Properties("StringTables") {
     val sizes2 = List(15, 2, 5, 20)
 
     def makeTable(sizes: List[Int]) =
-      StringTables.simple(data, Sizing.Fixed(sizes), testTheme)
+      Tables.simple(data, Sizing.Fixed(sizes), testTheme)
 
     makeTable(sizes1) == t1 && makeTable(sizes2) == t2
   }
@@ -100,7 +102,7 @@ class StringTablesSpec extends Properties("StringTables") {
       (Row.cell[String], Row.cell[Int], Row.cell[Boolean]).contramapN[User](u =>
         (u.name, u.age, u.active))
 
-    StringTables
+    Tables
       .markdown(("Name", "Age", "Active"), data)
       .trim() == t
   }
@@ -114,14 +116,14 @@ class StringTablesSpec extends Properties("StringTables") {
       case List(title, author) => Book(title, author)
     }
 
-    StringTables
+    Tables
       .markdown(("Title", "Author"), data)
       .trim() == t.mkString("\n")
   }
 
   property("TableSizeMustBeRespected") =
     Prop.forAllNoShrink(Gen.choose(35, 100)) { w: Int =>
-      val algebra = TableAlgebra[String, User]
+      val algebra = Table[String, User]
 
       val lines = algebra
         .table(
