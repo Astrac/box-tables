@@ -4,6 +4,7 @@ lazy val boxTables = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("."))
   .settings(
+    onLoad in Global := { Command.process("project root", _: State) } compose (onLoad in Global).value,
     organization := "astrac",
     name := "box-tables",
     description := "A library to create box-drawing tables",
@@ -84,6 +85,3 @@ lazy val boxTablesJVM = boxTables.jvm
 
 lazy val root = project
   .aggregate(boxTablesJS, boxTablesJVM)
-
-test := (root / Test / test).value
-compile := (root / Compile / compile).value
