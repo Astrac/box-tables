@@ -11,22 +11,23 @@ import Sizing._
 
 trait Line[Primitive, Model] {
   implicit def Primitive: Monoid[Primitive]
-  implicit def F: Formatter[Primitive]
   implicit def Model: Row[Model]
 
+  val formatter: Rows[Primitive, Formatter[Primitive]] = Rows.formatter
   val sizing: Rows[Primitive, Sizing] = Rows.sizing
   val theme: Rows[Primitive, Theme[Primitive]] = Rows.theme
 
   def transpose(
-      ls: List[List[Primitive]]): Rows[Primitive, List[List[Primitive]]] = {
-    val w = ls.map(_.size).max
-    ls.zipWithIndex
-      .traverse {
-        case (l, i) =>
-          cellWidth(i).map(cw => l.padTo(w, Primitive.combineN(F.space, cw)))
-      }
-      .map(_.transpose)
-  }
+      ls: List[List[Primitive]]): Rows[Primitive, List[List[Primitive]]] =
+    formatter.flatMap { f =>
+      val w = ls.map(_.size).max
+      ls.zipWithIndex
+        .traverse {
+          case (l, i) =>
+            cellWidth(i).map(cw => l.padTo(w, Primitive.combineN(f.space, cw)))
+        }
+        .map(_.transpose)
+    }
 
   def boundedSpace(w: Int): Rows[Primitive, Int] = theme.map { t =>
     math.max(0,
@@ -117,28 +118,31 @@ trait Line[Primitive, Model] {
       .flatMap(identity)
 
   def contentLine(contents: List[Primitive]): Rows[Primitive, Primitive] =
-    theme.flatMap { t =>
-      line(t.margins.fill.l,
-           t.borders.l,
-           t.padding.fill.l,
-           contents,
-           t.dividers.v.getOrElse(F.space),
-           t.padding.fill.r,
-           t.borders.r,
-           t.margins.fill.r)
-    }
+    for {
+      t <- theme
+      f <- formatter
+      l <- line(t.margins.fill.l,
+                t.borders.l,
+                t.padding.fill.l,
+                contents,
+                t.dividers.v.getOrElse(f.space),
+                t.padding.fill.r,
+                t.borders.r,
+                t.margins.fill.r)
+    } yield l
 
   def paddingLine(p: Primitive): Rows[Primitive, Primitive] =
-    (theme, fillCells(p))
-      .mapN { (t, cs) =>
-        line(t.margins.fill.l,
-             t.borders.l,
-             p,
-             cs,
-             t.dividers.v.getOrElse(F.space),
-             p,
-             t.borders.r,
-             t.margins.fill.r)
-      }
-      .flatMap(identity)
+    for {
+      t <- theme
+      cs <- fillCells(p)
+      f <- formatter
+      l <- line(t.margins.fill.l,
+                t.borders.l,
+                p,
+                cs,
+                t.dividers.v.getOrElse(f.space),
+                p,
+                t.borders.r,
+                t.margins.fill.r)
+    } yield l
 }

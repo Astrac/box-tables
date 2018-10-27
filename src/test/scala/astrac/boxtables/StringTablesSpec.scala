@@ -132,7 +132,7 @@ class StringTablesSpec extends Properties("Tables") {
             User("Billy Pilgrim", 20, false, Counters(5, 7)),
             User("Mandarax", 3, true, Counters(10, 0))
           ))
-        .run(RowsConfig(testTheme, Sizing.Equal(w)))
+        .run(RowsConfig(testTheme, Sizing.Equal(w), Formatter.basic))
 
       lines.forall(_.size == w)
     }
