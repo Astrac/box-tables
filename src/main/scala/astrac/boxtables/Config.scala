@@ -1,12 +1,12 @@
 package astrac.boxtables
 
-case class RowsConfig[T](theme: Theme[T], sizing: Sizing)
+case class RowsConfig[Primitive](theme: Theme[Primitive], sizing: Sizing)
 
-case class TableConfig[T](
-    main: RowsConfig[T],
-    header: Option[RowsConfig[T]] = None,
-    footer: Option[RowsConfig[T]] = None
+case class TableConfig[Primitive](
+    main: RowsConfig[Primitive],
+    header: Option[RowsConfig[Primitive]] = None,
+    footer: Option[RowsConfig[Primitive]] = None
 ) {
-  lazy val safeHeader: RowsConfig[T] = header.getOrElse(main)
-  lazy val safeFooter: RowsConfig[T] = footer.getOrElse(main)
+  lazy val safeHeader: RowsConfig[Primitive] = header.getOrElse(main)
+  lazy val safeFooter: RowsConfig[Primitive] = footer.getOrElse(main)
 }

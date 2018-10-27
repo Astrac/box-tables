@@ -1,8 +1,8 @@
 package astrac.boxtables
 
-trait Formatter[T] {
-  def space: T
-  def apply(w: Int)(s: String): List[T]
+trait Formatter[Primitive] {
+  def space: Primitive
+  def apply(w: Int)(s: String): List[Primitive]
 }
 
 object Formatter {

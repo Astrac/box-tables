@@ -3,7 +3,7 @@ package astrac
 import cats.data.Reader
 
 package object boxtables {
-  type Rows[T, R] = Reader[RowsConfig[T], R]
-  type Template[T] = Reader[TableConfig[T], List[T]]
+  type Rows[Primitive, A] = Reader[RowsConfig[Primitive], A]
+  type Template[Primitive] = Reader[TableConfig[Primitive], List[Primitive]]
   def discard[T]: T => Unit = _ => ()
 }

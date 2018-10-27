@@ -8,47 +8,58 @@ object Spacing {
   def hv(h: Int, v: Int) = Spacing(v, h, v, h)
 }
 
-case class Sides[T](t: T, r: T, b: T, l: T)
+case class Sides[Primitive](t: Primitive,
+                            r: Primitive,
+                            b: Primitive,
+                            l: Primitive)
 
 object Sides {
-  def all[T](v: T) = Sides(v, v, v, v)
-  def hv[T](h: T, v: T) = Sides(v, h, v, h)
+  def all[Primitive](v: Primitive) = Sides(v, v, v, v)
+  def hv[Primitive](h: Primitive, v: Primitive) = Sides(v, h, v, h)
 }
 
-case class Intersections[T](t: T, r: T, b: T, l: T, c: T)
+case class Intersections[Primitive](t: Primitive,
+                                    r: Primitive,
+                                    b: Primitive,
+                                    l: Primitive,
+                                    c: Primitive)
 
 object Intersections {
-  def all[T](v: T) = Intersections(v, v, v, v, v)
-  def hvc[T](h: T, v: T, c: T) = Intersections(v, h, v, h, c)
+  def all[Primitive](v: Primitive) = Intersections(v, v, v, v, v)
+  def hvc[Primitive](h: Primitive, v: Primitive, c: Primitive) =
+    Intersections(v, h, v, h, c)
 }
 
-case class Corners[T](tl: T, tr: T, br: T, bl: T)
+case class Corners[Primitive](tl: Primitive,
+                              tr: Primitive,
+                              br: Primitive,
+                              bl: Primitive)
 
 object Corners {
-  def all[T](v: T) = Corners(v, v, v, v)
+  def all[Primitive](v: Primitive) = Corners(v, v, v, v)
 }
 
-case class Dividers[T](h: Option[T], v: Option[T])
+case class Dividers[Primitive](h: Option[Primitive], v: Option[Primitive])
 object Dividers {
-  def hv[T](h: T, v: T) = Dividers(Some(h), Some(v))
+  def hv[Primitive](h: Primitive, v: Primitive) = Dividers(Some(h), Some(v))
   lazy val none = Dividers(None, None)
 }
 
-case class Padding[T](
+case class Padding[Primitive](
     space: Spacing,
-    fill: Sides[T]
+    fill: Sides[Primitive]
 )
 
-case class Margins[T](
+case class Margins[Primitive](
     space: Spacing,
-    fill: Sides[T]
+    fill: Sides[Primitive]
 )
 
-case class Theme[T](
-    borders: Sides[T],
-    corners: Corners[T],
-    dividers: Dividers[T],
-    padding: Padding[T],
-    margins: Margins[T],
-    intersections: Intersections[T]
+case class Theme[Primitive](
+    borders: Sides[Primitive],
+    corners: Corners[Primitive],
+    dividers: Dividers[Primitive],
+    padding: Padding[Primitive],
+    margins: Margins[Primitive],
+    intersections: Intersections[Primitive]
 )

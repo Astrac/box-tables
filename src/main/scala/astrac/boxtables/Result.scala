@@ -3,15 +3,15 @@ package astrac.boxtables
 import cats.data.Reader
 
 object Rows {
-  def sizing[T]: Rows[T, Sizing] =
+  def sizing[Primitive]: Rows[Primitive, Sizing] =
     Reader(_.sizing)
 
-  def theme[T]: Rows[T, Theme[T]] =
+  def theme[Primitive]: Rows[Primitive, Theme[Primitive]] =
     Reader(_.theme)
 
-  def pure[T, A](t: A): Rows[T, A] =
+  def pure[Primitive, A](t: A): Rows[Primitive, A] =
     Reader(_ => t)
 
-  def apply[T, A](f: RowsConfig[T] => A): Rows[T, A] =
+  def apply[Primitive, A](f: RowsConfig[Primitive] => A): Rows[Primitive, A] =
     Reader(f)
 }

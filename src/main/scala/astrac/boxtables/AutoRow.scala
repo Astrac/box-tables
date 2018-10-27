@@ -1,11 +1,11 @@
 package astrac.boxtables
 
-import shapeless.{::, Generic => SGeneric, HList, HNil, Nat, Poly1}
+import shapeless.{::, Generic, HList, HNil, Nat, Poly1}
 import shapeless.ops.hlist.{Length, LiftAll, Mapper, ToList, Zip}
 import shapeless.ops.nat.ToInt
 
-trait AutoRow[A] {
-  def row: Row[A]
+trait AutoRow[Model] {
+  def row: Row[Model]
 }
 
 object AutoRow {
@@ -16,30 +16,31 @@ object AutoRow {
     }
   }
 
-  implicit def instance[A,
-                        L <: HList,
-                        R <: HList,
-                        LR <: HList,
-                        S <: HList,
-                        N <: Nat](implicit g: SGeneric.Aux[A, L],
-                                  c: LiftAll.Aux[Cell, L, R],
-                                  z: Zip.Aux[L :: R :: HNil, LR],
-                                  m: Mapper.Aux[mapper.type, LR, S],
-                                  l: ToList[S, String],
-                                  s: Length.Aux[S, N],
-                                  i: ToInt[N]): AutoRow[A] =
-    new AutoRow[A] {
-      val row = Row.unsafe(i(), { a: A =>
-        discard(s)
-        g.to(a).zip(c.instances).map(mapper).toList
+  implicit def instance[Model,
+                        Repr <: HList,
+                        Cells <: HList,
+                        Args <: HList,
+                        Contents <: HList,
+                        Size <: Nat](
+      implicit generic: Generic.Aux[Model, Repr],
+      liftCells: LiftAll.Aux[Cell, Repr, Cells],
+      zipArgs: Zip.Aux[Repr :: Cells :: HNil, Args],
+      contentMapper: Mapper.Aux[mapper.type, Args, Contents],
+      toList: ToList[Contents, String],
+      lengthNat: Length.Aux[Contents, Size],
+      length: ToInt[Size]): AutoRow[Model] =
+    new AutoRow[Model] {
+      val row = Row.unsafe(length(), { model: Model =>
+        discard(lengthNat)
+        generic.to(model).zip(liftCells.instances).map(mapper).toList
       })
     }
 
   object instances {
-    implicit def rowInstance[A: AutoRow]: Row[A] = AutoRow[A]
+    implicit def rowInstance[Model: AutoRow]: Row[Model] = AutoRow[Model]
   }
 
-  def apply[A](implicit r: AutoRow[A]): Row[A] = r.row
+  def apply[Model](implicit r: AutoRow[Model]): Row[Model] = r.row
 
-  def derive[A: AutoRow]: Row[A] = apply
+  def derive[Model: AutoRow]: Row[Model] = apply
 }

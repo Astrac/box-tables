@@ -8,43 +8,44 @@ import cats.syntax.foldable._
 import cats.syntax.list._
 import cats.syntax.traverse._
 
-trait TableAlgebra[T, R] extends LineAlgebra[T, R] {
+trait TableAlgebra[Primitive, Model] extends LineAlgebra[Primitive, Model] {
 
-  lazy val topMargin: Rows[T, List[T]] = theme.flatMap { t =>
+  lazy val topMargin: Rows[Primitive, List[Primitive]] = theme.flatMap { t =>
     List.fill(t.margins.space.t)(marginLine(t.margins.fill.t)).sequence
   }
 
-  lazy val topBorder: Rows[T, List[T]] = theme.flatMap { t =>
+  lazy val topBorder: Rows[Primitive, List[Primitive]] = theme.flatMap { t =>
     borderLine(t.borders.t, t.corners.tl, t.intersections.t, t.corners.tr)
       .map(List(_))
   }
 
-  lazy val rowsDivider: Rows[T, List[T]] = theme.flatMap { t =>
-    t.dividers.h.fold[Rows[T, List[T]]](Rows.pure(Nil)) { h =>
+  lazy val rowsDivider: Rows[Primitive, List[Primitive]] = theme.flatMap { t =>
+    t.dividers.h.fold[Rows[Primitive, List[Primitive]]](Rows.pure(Nil)) { h =>
       borderLine(h, t.intersections.l, t.intersections.c, t.intersections.r)
         .map(List(_))
     }
   }
 
-  lazy val bottomBorder: Rows[T, List[T]] = theme.flatMap { t =>
+  lazy val bottomBorder: Rows[Primitive, List[Primitive]] = theme.flatMap { t =>
     borderLine(t.borders.b, t.corners.bl, t.intersections.b, t.corners.br)
       .map(List(_))
   }
 
-  lazy val bottomMargin: Rows[T, List[T]] = theme.flatMap { t =>
+  lazy val bottomMargin: Rows[Primitive, List[Primitive]] = theme.flatMap { t =>
     List.fill(t.margins.space.b)(marginLine(t.margins.fill.b)).sequence
   }
 
-  lazy val paddingTop: Rows[T, List[T]] = theme.flatMap { t =>
+  lazy val paddingTop: Rows[Primitive, List[Primitive]] = theme.flatMap { t =>
     List.fill(t.padding.space.t)(paddingLine(t.padding.fill.t)).sequence
   }
 
-  lazy val paddingBottom: Rows[T, List[T]] = theme.flatMap { t =>
-    List.fill(t.padding.space.b)(paddingLine(t.padding.fill.b)).sequence
+  lazy val paddingBottom: Rows[Primitive, List[Primitive]] = theme.flatMap {
+    t =>
+      List.fill(t.padding.space.b)(paddingLine(t.padding.fill.b)).sequence
   }
 
-  def row(a: R): Rows[T, List[T]] = {
-    val contents = R.toRow(a)
+  def row(model: Model): Rows[Primitive, List[Primitive]] = {
+    val contents = Model.toRow(model)
 
     val contentLines = contents.zipWithIndex
       .traverse {
@@ -58,27 +59,31 @@ trait TableAlgebra[T, R] extends LineAlgebra[T, R] {
 
   lazy val tableStart = topMargin |+| topBorder
 
-  def rows[F[_]: Foldable](as: F[R]): Rows[T, List[T]] = theme.flatMap { t =>
-    as.foldMap(a => row(a) |+| rowsDivider)
-      .map(_.toNel
-        .fold(List.empty[T])(l => t.dividers.h.fold(l.toList)(_ => l.init)))
-  }
+  def rows[F[_]: Foldable](as: F[Model]): Rows[Primitive, List[Primitive]] =
+    theme.flatMap { t =>
+      as.foldMap(model => row(model) |+| rowsDivider)
+        .map(_.toNel
+          .fold(List.empty[Primitive])(l =>
+            t.dividers.h.fold(l.toList)(_ => l.init)))
+    }
 
   lazy val tableEnd = bottomBorder |+| bottomMargin
 
-  def table[F[_]: Foldable](as: F[R]): Rows[T, List[T]] =
+  def table[F[_]: Foldable](as: F[Model]): Rows[Primitive, List[Primitive]] =
     tableStart |+| rows(as) |+| tableEnd
 }
 
 object TableAlgebra {
-  implicit def instance[T, R](implicit monoid: Monoid[T],
-                              formatter: Formatter[T],
-                              aRow: Row[R]): TableAlgebra[T, R] =
-    new TableAlgebra[T, R] {
-      implicit val T = monoid
+  implicit def instance[Primitive, Model](
+      implicit monoid: Monoid[Primitive],
+      formatter: Formatter[Primitive],
+      modelRow: Row[Model]): TableAlgebra[Primitive, Model] =
+    new TableAlgebra[Primitive, Model] {
+      implicit val Primitive = monoid
       implicit val F = formatter
-      implicit val R = aRow
+      implicit val Model = modelRow
     }
 
-  def apply[R, T](implicit t: TableAlgebra[R, T]): TableAlgebra[R, T] = t
+  def apply[Model, Primitive](implicit algebra: TableAlgebra[Model, Primitive])
+    : TableAlgebra[Model, Primitive] = algebra
 }

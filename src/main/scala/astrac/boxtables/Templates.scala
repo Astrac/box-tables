@@ -5,45 +5,51 @@ import cats.instances.list._
 import cats.syntax.monoid._
 
 object Templates {
-  private def header[T, H](header: H)(
-      implicit algebra: TableAlgebra[T, H]): Rows[T, List[T]] =
+  private def header[Primitive, Header](header: Header)(
+      implicit algebra: TableAlgebra[Primitive, Header])
+    : Rows[Primitive, List[Primitive]] =
     algebra.tableStart |+|
       algebra.row(header) |+|
       algebra.rowsDivider
 
-  private def footer[T, F](footer: F)(
-      implicit algebra: TableAlgebra[T, F]
-  ): Rows[T, List[T]] =
+  private def footer[Primitive, Footer](footer: Footer)(
+      implicit algebra: TableAlgebra[Primitive, Footer]
+  ): Rows[Primitive, List[Primitive]] =
     algebra.rowsDivider |+|
       algebra.row(footer) |+|
       algebra.tableEnd
 
-  def simple[F[_]: Foldable, T, R](as: F[R])(
-      implicit algebra: TableAlgebra[T, R]): Template[T] =
+  def simple[F[_]: Foldable, Primitive, Model](as: F[Model])(
+      implicit algebra: TableAlgebra[Primitive, Model]): Template[Primitive] =
     (algebra.tableStart |+| algebra.rows(as) |+| algebra.tableEnd).local(_.main)
 
-  def withHeader[F[_]: Foldable, T, H, R](h: H, as: F[R])(
-      implicit hAlgebra: TableAlgebra[T, H],
-      rAlgebra: TableAlgebra[T, R]
-  ): Template[T] =
-    header(h).local[TableConfig[T]](_.safeHeader) |+|
+  def withHeader[F[_]: Foldable, Primitive, Header, Model](h: Header,
+                                                           as: F[Model])(
+      implicit hAlgebra: TableAlgebra[Primitive, Header],
+      rAlgebra: TableAlgebra[Primitive, Model]
+  ): Template[Primitive] =
+    header(h).local[TableConfig[Primitive]](_.safeHeader) |+|
       rAlgebra.rows(as).local(_.main) |+|
       rAlgebra.tableEnd.local(_.main)
 
-  def withFooter[F[_]: Foldable, T, R, E](as: F[R], f: E)(
-      implicit rAlgebra: TableAlgebra[T, R],
-      fAlgebra: TableAlgebra[T, E]
-  ): Template[T] =
-    rAlgebra.tableStart.local[TableConfig[T]](_.main) |+|
+  def withFooter[F[_]: Foldable, Primitive, Model, Footer](as: F[Model],
+                                                           f: Footer)(
+      implicit rAlgebra: TableAlgebra[Primitive, Model],
+      fAlgebra: TableAlgebra[Primitive, Footer]
+  ): Template[Primitive] =
+    rAlgebra.tableStart.local[TableConfig[Primitive]](_.main) |+|
       rAlgebra.rows(as).local(_.main) |+|
       footer(f).local(_.safeFooter)
 
-  def withHeaderAndFooter[F[_]: Foldable, T, H, R, E](h: H, as: F[R], f: E)(
-      implicit hAlgebra: TableAlgebra[T, H],
-      rAlgebra: TableAlgebra[T, R],
-      fAlgebra: TableAlgebra[T, E]
-  ): Template[T] =
-    header(h).local[TableConfig[T]](_.safeHeader) |+|
+  def withHeaderAndFooter[F[_]: Foldable, Primitive, Header, Model, Footer](
+      h: Header,
+      as: F[Model],
+      f: Footer)(
+      implicit hAlgebra: TableAlgebra[Primitive, Header],
+      rAlgebra: TableAlgebra[Primitive, Model],
+      fAlgebra: TableAlgebra[Primitive, Footer]
+  ): Template[Primitive] =
+    header(h).local[TableConfig[Primitive]](_.safeHeader) |+|
       rAlgebra.rows(as).local(_.main) |+|
       footer(f).local(_.safeFooter)
 }
