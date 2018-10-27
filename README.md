@@ -6,17 +6,19 @@ A scala library to build customisable, flexible box-drawing tables.
 
 ## Getting started
 
-This is the dependency to get version 0.x from bintray (see badge at the top for the latest version):
+This is the dependency to get version 0.x from bintray (see badge at the top
+for the latest version):
 
 ```scala
 resolvers += Resolvers.bintray("astrac", "maven")
-libraryDependencies += "astrac" %% "box-tables" % "0.x"
+libraryDependencies += "astrac" %% "box-tables" % "0.x.y"
 ```
 
 ## Simple example
 
 ```scala
-import astrac.boxtables.{AutoRow, Cell, Row, Sizing, StringTables, Themes}
+import astrac.boxtables.{AutoRow, Cell, Row, Sizing}
+import astrac.boxtables.string.{Tables, Themes}
 import astrac.boxtables.instances.all._
 import cats.instances.list._
 import cats.instances.string._
@@ -35,7 +37,7 @@ val users = List(
   User("Mandarax", 3, true, Counters(10, 0))
 )
 
-println(StringTables.simple(users, Sizing.Equal(80), Themes.singleLineAscii))
+println(Tables.simple(users, Sizing.Equal(80), Themes.singleLineAscii))
 ```
 
 ```
@@ -62,8 +64,8 @@ println(StringTables.simple(users, Sizing.Equal(80), Themes.singleLineAscii))
 
 ## Dependencies
 
-Box-tables depends on `shapeless` (for `Sized` and generic derivation) and on `cats`
-for algebraic typeclasses as `Monoid`.
+Box-tables depends on `shapeless` (for `Sized` and generic derivation) and on
+`cats` for algebraic typeclasses as `Monoid`.
 
 ## Cells
 
@@ -77,12 +79,14 @@ trait Cell[A] {
 }
 ```
 
-Primitive, datetime and option instances are defined in the package `astrac.boxtables.instances`
-and are not available by default so they must be explicitly imported.
+Primitive, datetime and option instances are defined in the package
+`astrac.boxtables.instances` and are not available by default so they must be
+explicitly imported.
 
 ## Rows
 
-Any type can be represented as a row of a table as long as there is in scope an instance of the `Row` typeclass:
+Any type can be represented as a row of a table as long as there is in scope an
+instance of the `Row` typeclass:
 
 ```scala
 sealed trait Row[A] {
@@ -110,8 +114,9 @@ val rowFoo: Row[Foo] = AutoRow[Row]
 val rowString: Row[String] = Row.cell
 ```
 
-`Row` is also a `cats.ContravariantMonoidal` and hence it is possible to use functions like `contramap`
-and `contramapN` to create new instances from already existing ones; for example:
+`Row` is also a `cats.ContravariantMonoidal` and hence it is possible to use
+functions like `contramap` and `contramapN` to create new instances from already
+existing ones; for example:
 
 ```scala
 // Using contramap to create a `Row` instance for a value-class
@@ -125,7 +130,8 @@ val rowFoo: Row[Foo] =
   }
 ```
 
-Finally it is also possible to enable full automatic derivation for tuples and case classes:
+Finally it is also possible to enable full automatic derivation for tuples and
+case classes:
 
 ```scala
 import astarc.boxtables.AutoRow.instances._
@@ -154,39 +160,52 @@ val size = Sizing.Fixed(List(20, 60, 10))
 
 ## Algebra and Formatters
 
-The algebra that implement the table creation is not bound to `String` but can work with any type that defines a `Monoid`;
-this is its definition:
+The algebra that implement the table creation is not bound to `String` but can
+work with any type that defines a `Monoid`; this is its definition:
 
 ```scala
-trait TableAlgebra[A, T] {
-  implicit def T: Monoid[T]
-  implicit def F: Formatter[T]
-  implicit def R: Row[A]
+trait TableAlgebra[Model, Primitive] {
+  implicit def Primitive: Monoid[Primitive]
+  implicit def R: Row[Model]
   ...
 }
 ```
 
-This exposes functions that allow to create components from the table or a table altogether (`algebra.table(data)`);
-all these functions are not specifically bound work on `String` but any type could be used as long as there are a `Monoid`
-and a `Formatter` available for that type (e.g. a `String` with additional styling information).
+This exposes functions that allow to create components from the table or a table
+altogether (`algebra.table(data)`); all these functions are not specifically
+bound work on `String` but any type could be used as long as there is a `Monoid`
+available for that type (e.g. a `String` with additional styling information).
+
+## Formatters
 
 This is the definition of a `Formatter`:
 
 ```scala
-trait Formatter[T] {
-  def space: T
-  def apply(w: Int)(s: String): List[T]
+trait Formatter[Primitive] {
+  def space: Primitive
+  def apply(w: Int)(s: String): List[Primitive]
 }
 ```
 
-The purpose of the formatter is to bridge from the `String` values extracted by the `Row` typeclass and the internal
-representation of the algebra. The `space` function returns a single blank space and `apply` formats a single `String`
-in a `List` of the target representation. This is where contents that are too long to fit in one cell are split into
-multiple lines.
+The purpose of the formatter is to bridge from the `String` values extracted by
+the `Row` typeclass and the internal representation of the algebra. The `space`
+function returns a single blank space and `apply` formats a single `String` in a
+`List` of the target representation. This is where contents that are too long to
+fit in one cell are split into multiple lines.
 
-## StringTables
+Formatters are provided when running algebra operations and when calling
+functions in the `Tables` object; two formatters have been implemented so
+far and they can only be applied to the table as a whole:
 
-The `astrac.boxtables.StringTables` singleton exposes the functions to create several types of commonly used tables:
+* `Formatter.basic` - Simply breaks the string so that it fits the space
+* `Formatter.withWordBoundaries` - Simple algorithm that preserves words
+
+## The `string` package
+
+The `astrac.boxtables.string` package defines specialised implementations of the
+table components when the primitive type is a simple string. The `Themes` object
+contains the definition of a few themes and the `Tables` object exposes the
+following functions:
 
 - `simple` - A table with no headers or footers
 - `withHeader`
@@ -194,11 +213,17 @@ The `astrac.boxtables.StringTables` singleton exposes the functions to create se
 - `withHeaderAndFooter`
 - `markdown`
 
-When creating tables with headers and footers different themes can be defined for each part of the table using the `TableConfig[T]` case class; if not specified, header and footer configurations will default to the main theme.
+When creating tables with headers and footers different themes can be defined
+for each part of the table using the `TableConfig[Primitive]` case class; if
+not specified, header and footer configurations will default to the main theme.
 
 ## Markdown tables generation
 
-`StringTables.markdown` will generate a markdown table from the provided data. Please note that since content-based table sizing is not yet implemented it is the user's responsibility to configure column sizing so that cells do not overflow on a new line. By default the function will provide evenly distributed columns for a 80 characters wide table. This is an example of usage:
+`StringTables.markdown` will generate a markdown table from the provided data.
+Please note that since content-based table sizing is not yet implemented it is
+the user's responsibility to configure column sizing so that cells do not
+overflow on a new line. By default the function will provide evenly distributed
+columns for a 80 characters wide table. This is an example of usage:
 
 ```scala
 import astrac.boxtables.{AutoRow, StringTables}
@@ -227,6 +252,9 @@ println(StringTables.markdown(
 
 Which renders on GitHub as:
 
+
+
+
 | Title                                 | Author                               |
 |---------------------------------------|--------------------------------------|
 | The Three Body Problem                | Cixin Liu                            |
@@ -250,7 +278,7 @@ Themes are fully customisable, this is an example of theme definition:
   val unicodeFrame = Theme[String](
     borders = Sides.hv(h = "┃", v = "━"),
     corners = Corners(tl = "╆", tr = "╅", bl = "╄", br = "╃"),
-    dividers = Dividers(v = "┃", h = "━"),
+    dividers = Dividers.hv(v = "┃", h = "━"),
     padding = Padding(space = Spacing.all(1), fill = Sides.all(" ")),
     margins = Margins(space = Spacing.all(1), fill = Sides.all("░")),
     intersections = Intersections(l = "╊", r = "╉", b = "╇", t = "╈", c = "╋")
