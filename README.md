@@ -222,7 +222,56 @@ far and they can only be applied to the table as a whole:
 * `Formatter.basic` - Simply breaks the string so that it fits the space
 * `Formatter.withWordBoundaries` - Simple algorithm that preserves words
 
-The default formatter when calling functions in the `Tables` object is `basic`.
+The default formatter when calling functions in the `Tables` object is `basic`;
+this is an example of using the `withWordBoundaries` formatter:
+
+```scala
+import astrac.boxtables.{Formatter, Sizing}
+import astrac.boxtables.string.{Tables, Themes}
+import astrac.boxtables.instances.all._
+import astrac.boxtables.AutoRow.instances._
+import cats.instances.list._
+import cats.instances.string._
+
+val loremIpsum =
+  """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam
+    |id molestie erat. Duis auctor vestibulum lacus quis ultrices.
+    |""".stripMargin.replace("\n", " ")
+
+println(
+  Tables.simple(
+    List.((loremIpsum, loremIpsum), (loremIpsum, loremIpsum)),
+    Sizing.Weighted(80, List(1, 3)),
+    Themes.blankCompact,
+    Formatter.withWordBoundaries
+  )
+)
+```
+
+On the REPL:
+
+```
+// Exiting paste mode, now interpreting.
+
+
+ Lorem ipsum dolor    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+ sit amet,            Nullam id molestie erat. Duis auctor vestibulum lacus
+ consectetur          quis ultrices.
+ adipiscing elit.
+ Nullam id molestie
+ erat. Duis auctor
+ vestibulum lacus
+ quis ultrices.
+
+ Lorem ipsum dolor    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+ sit amet,            Nullam id molestie erat. Duis auctor vestibulum lacus
+ consectetur          quis ultrices.
+ adipiscing elit.
+ Nullam id molestie
+ erat. Duis auctor
+ vestibulum lacus
+ quis ultrices.
+```
 
 ## The `string` package
 
@@ -275,9 +324,6 @@ println(Tables.markdown(
 ```
 
 Which renders on GitHub as:
-
-
-
 
 | Title                                 | Author                               |
 |---------------------------------------|--------------------------------------|
