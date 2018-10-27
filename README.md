@@ -17,7 +17,7 @@ libraryDependencies += "astrac" %% "box-tables" % "0.x.y"
 ## Simple example
 
 ```scala
-import astrac.boxtables.{AutoRow, Cell, Row, Sizing}
+import astrac.boxtables.{AutoRow, Cell, Row, Spacing, Sizing}
 import astrac.boxtables.string.{Tables, Themes}
 import astrac.boxtables.instances.all._
 import cats.instances.list._
@@ -38,6 +38,7 @@ val users = List(
 )
 
 println(Tables.simple(users, Sizing.Equal(80), Themes.singleLineAscii))
+println(Tables.simple(users, Sizing.Weighted(80, List(2, 1, 1, 2)), Themes.doubleLineAscii))
 ```
 
 ```
@@ -60,6 +61,24 @@ println(Tables.simple(users, Sizing.Equal(80), Themes.singleLineAscii))
  │                   │                  │                  │ Transfers: 0     │
  │                   │                  │                  │                  │
  └───────────────────┴──────────────────┴──────────────────┴──────────────────┘
+
+
+ ╔═══════════════════════╦═════════════╦═════════════╦═══════════════════════╗
+ ║                       ║             ║             ║                       ║
+ ║ Kilgore Trout         ║ 30          ║ true        ║ Visits: 18            ║
+ ║                       ║             ║             ║ Transfers: 35         ║
+ ║                       ║             ║             ║                       ║
+ ╠═══════════════════════╬═════════════╬═════════════╬═══════════════════════╣
+ ║                       ║             ║             ║                       ║
+ ║ Billy Pilgrim         ║ 20          ║ false       ║ Visits: 5             ║
+ ║                       ║             ║             ║ Transfers: 7          ║
+ ║                       ║             ║             ║                       ║
+ ╠═══════════════════════╬═════════════╬═════════════╬═══════════════════════╣
+ ║                       ║             ║             ║                       ║
+ ║ Mandarax              ║ 3           ║ true        ║ Visits: 10            ║
+ ║                       ║             ║             ║ Transfers: 0          ║
+ ║                       ║             ║             ║                       ║
+ ╚═══════════════════════╩═════════════╩═════════════╩═══════════════════════╝
 ```
 
 ## Dependencies
@@ -138,7 +157,7 @@ import astarc.boxtables.AutoRow.instances._
 
 val data: List[SomeCaseClass] = ...
 
-println(StringTables.simple(data, Sizing.Equal(80), Themes.singleLineAscii))
+println(Tables.simple(data, Sizing.Equal(80), Themes.singleLineAscii))
 ```
 
 ## Sizing
@@ -224,22 +243,22 @@ not specified, header and footer configurations will default to the main theme.
 
 ## Markdown tables generation
 
-`StringTables.markdown` will generate a markdown table from the provided data.
+`Tables.markdown` will generate a markdown table from the provided data.
 Please note that since content-based table sizing is not yet implemented it is
 the user's responsibility to configure column sizing so that cells do not
 overflow on a new line. By default the function will provide evenly distributed
 columns for a 80 characters wide table. This is an example of usage:
 
 ```scala
-import astrac.boxtables.{AutoRow, StringTables}
+import astrac.boxtables.string.Tables
 import astrac.boxtables.instances.all._
-import AutoRow.instances._
+import astrac.boxtables.AutoRow.instances._
 import cats.instances.list._
 import cats.instances.string._
 
 case class Book(title: String, author: String)
 
-println(StringTables.markdown(
+println(Tables.markdown(
   ("Title", "Author"),
   List(
     Book("The Three Body Problem", "Cixin Liu"),
