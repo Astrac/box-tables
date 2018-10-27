@@ -14,6 +14,59 @@ object Examples {
     "/test-theme-fixed-sizing.example" -> fixedSizing
   )
 
+  val loremIpsum =
+    """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam
+      |id molestie erat. Duis auctor vestibulum lacus quis ultrices.
+      |Vestibulum et dapibus ligula. Fusce lacinia nisl id tincidunt
+      |egestas.""".stripMargin.replace("\n", " ")
+
+  val loremIpsumShort =
+    """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam
+      |id molestie erat. Duis auctor vestibulum lacus quis ultrices.
+      |""".stripMargin.replace("\n", " ")
+
+  val tableWordBoundariesFormatter = List(
+    "                                                            ",
+    " ┌─────────────┬──────────────────┬───────────────────────┐ ",
+    " │             │                  │                       │ ",
+    " │ Lorem ipsum │ Lorem ipsum      │ Lorem ipsum dolor sit │ ",
+    " │ dolor sit   │ dolor sit amet,  │ amet, consectetur     │ ",
+    " │ amet,       │ consectetur      │ adipiscing elit.      │ ",
+    " │ consectetur │ adipiscing elit. │ Nullam id molestie    │ ",
+    " │ adipiscing  │ Nullam id        │ erat. Duis auctor     │ ",
+    " │ elit.       │ molestie erat.   │ vestibulum lacus quis │ ",
+    " │ Nullam id   │ Duis auctor      │ ultrices. Vestibulum  │ ",
+    " │ molestie    │ vestibulum lacus │ et dapibus ligula.    │ ",
+    " │ erat. Duis  │ quis ultrices.   │ Fusce lacinia nisl id │ ",
+    " │ auctor      │ Vestibulum et    │ tincidunt egestas.    │ ",
+    " │ vestibulum  │ dapibus ligula.  │                       │ ",
+    " │ lacus quis  │ Fusce lacinia    │                       │ ",
+    " │ ultrices.   │ nisl id          │                       │ ",
+    " │             │ tincidunt        │                       │ ",
+    " │             │ egestas.         │                       │ ",
+    " │             │                  │                       │ ",
+    " ├─────────────┼──────────────────┼───────────────────────┤ ",
+    " │             │                  │                       │ ",
+    " │ Lorem ipsum │ Lorem ipsum      │ Lorem ipsum dolor sit │ ",
+    " │ dolor sit   │ dolor sit amet,  │ amet, consectetur     │ ",
+    " │ amet,       │ consectetur      │ adipiscing elit.      │ ",
+    " │ consectetur │ adipiscing elit. │ Nullam id molestie    │ ",
+    " │ adipiscing  │ Nullam id        │ erat. Duis auctor     │ ",
+    " │ elit.       │ molestie erat.   │ vestibulum lacus quis │ ",
+    " │ Nullam id   │ Duis auctor      │ ultrices. Vestibulum  │ ",
+    " │ molestie    │ vestibulum lacus │ et dapibus ligula.    │ ",
+    " │ erat. Duis  │ quis ultrices.   │ Fusce lacinia nisl id │ ",
+    " │ auctor      │ Vestibulum et    │ tincidunt egestas.    │ ",
+    " │ vestibulum  │ dapibus ligula.  │                       │ ",
+    " │ lacus quis  │ Fusce lacinia    │                       │ ",
+    " │ ultrices.   │ nisl id          │                       │ ",
+    " │             │ tincidunt        │                       │ ",
+    " │             │ egestas.         │                       │ ",
+    " │             │                  │                       │ ",
+    " └─────────────┴──────────────────┴───────────────────────┘ ",
+    "                                                            "
+  ).mkString("\n")
+
   val auto =
     ("""The Three Body Problem, Cixin Liu
       |The Stars My Destination, Alfred Bester
