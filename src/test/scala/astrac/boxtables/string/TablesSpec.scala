@@ -137,17 +137,20 @@ class TablesSpec extends Properties("Tables") {
       lines.forall(_.size == w)
     }
 
-  property("TableWithWordBoundariesFormatter") = {
-    implicit val tupleRow: Row[(String, String, String)] =
-      AutoRow.formatted(Formatter.withWordBoundaries)
+  property("TableWithAligningFormatters") = {
+    implicit val tupleRow: Row[(String, String, String)] = (
+      Row[String].format(Formatter.leftAlign),
+      Row[String].format(Formatter.centerAlign),
+      Row[String].format(Formatter.rightAlign)
+    ).tupled
 
-    val tbl = Tables.simple(
+    val table = Tables.simple(
       List.fill(2)(
         (Examples.loremIpsumShort, Examples.loremIpsum, Examples.loremIpsum)),
       Sizing.Weighted(60, List(2, 3, 4)),
       Themes.singleLineAscii
     )
 
-    tbl == Examples.tableWordBoundariesFormatter
+    table == Examples.tableWordBoundariesFormatter
   }
 }
