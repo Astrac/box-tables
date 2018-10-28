@@ -1,15 +1,15 @@
 package astrac.boxtables
+package string
 
 import astrac.boxtables.algebra.Table
-import astrac.boxtables.string.{Tables, Themes}
-import astrac.boxtables.instances.all._
+import astrac.boxtables.string.instances._
 import cats.instances.list._
 import cats.instances.string._
 import cats.syntax.contravariantSemigroupal._
 import org.scalacheck.{Gen, Prop}
 import org.scalacheck.Properties
 
-class StringTablesSpec extends Properties("Tables") {
+class TablesSpec extends Properties("Tables") {
   case class Counters(visits: Int, transfers: Int)
   case class User(name: String, age: Int, active: Boolean, counters: Counters)
 
@@ -116,7 +116,7 @@ class StringTablesSpec extends Properties("Tables") {
   }
 
   property("AutoInstances") = {
-    import AutoRow.instances._
+    import fullAuto._
 
     case class Book(title: String, author: String)
 

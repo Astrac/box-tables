@@ -4,7 +4,7 @@ package algebra
 import cats.data.Reader
 
 object Rows {
-  def formatter[Primitive]: Rows[Primitive, Formatter[Primitive]] =
+  def formatter[Primitive]: Rows[Primitive, GenericFormatter[Primitive]] =
     Reader(_.formatter)
 
   def sizing[Primitive]: Rows[Primitive, Sizing] =

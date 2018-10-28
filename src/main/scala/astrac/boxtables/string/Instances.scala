@@ -1,6 +1,6 @@
-package astrac.boxtables.instances
+package astrac.boxtables
+package string
 
-import astrac.boxtables.Cell
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
 
@@ -32,4 +32,4 @@ object Temporal {
     Cell.instance(f.format)
 }
 
-trait All extends Primitives with Containers with Temporal
+trait Instances extends Primitives with Containers with Temporal

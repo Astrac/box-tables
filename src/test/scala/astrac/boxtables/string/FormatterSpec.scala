@@ -1,4 +1,5 @@
 package astrac.boxtables
+package string
 
 import cats.syntax.list._
 import org.scalacheck.{Gen, Prop, Properties}
@@ -6,7 +7,7 @@ import org.scalacheck.Prop.BooleanOperators
 
 class FormatterSpec extends Properties("Formatter") {
 
-  def checkFormatters(fs: Formatter[String]*)(
+  def checkFormatters(fs: Formatter*)(
       invariant: (Int, String, List[String]) => Prop): Prop = {
     def wordGen(cellWidth: Int) =
       for {

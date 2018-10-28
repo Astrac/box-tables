@@ -9,8 +9,7 @@ object Tables {
   def simple[F[_]: Foldable, Model](data: F[Model],
                                     sizing: Sizing,
                                     theme: Theme[String],
-                                    formatter: Formatter[String] =
-                                      Formatter.basic)(
+                                    formatter: Formatter = Formatter.basic)(
       implicit algebra: Table[String, Model]
   ): String =
     Templates

@@ -78,7 +78,7 @@ trait Table[Primitive, Model] extends Line[Primitive, Model] {
 object Table {
   implicit def instance[Primitive, Model](
       implicit monoid: Monoid[Primitive],
-      modelRow: Row[Model]): Table[Primitive, Model] =
+      modelRow: GenericRow[Primitive, Model]): Table[Primitive, Model] =
     new Table[Primitive, Model] {
       implicit val Primitive = monoid
       implicit val Model = modelRow

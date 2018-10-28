@@ -11,9 +11,9 @@ import Sizing._
 
 trait Line[Primitive, Model] {
   implicit def Primitive: Monoid[Primitive]
-  implicit def Model: Row[Model]
+  implicit def Model: GenericRow[Primitive, Model]
 
-  val formatter: Rows[Primitive, Formatter[Primitive]] = Rows.formatter
+  val formatter: Rows[Primitive, GenericFormatter[Primitive]] = Rows.formatter
   val sizing: Rows[Primitive, Sizing] = Rows.sizing
   val theme: Rows[Primitive, Theme[Primitive]] = Rows.theme
 

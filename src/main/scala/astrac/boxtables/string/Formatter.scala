@@ -1,13 +1,10 @@
 package astrac.boxtables
+package string
 
-trait Formatter[Primitive] {
-  def space: Primitive
-  def apply(s: String)(w: Int): List[Primitive]
-}
+trait Formatter extends GenericFormatter[String]
 
 object Formatter {
-
-  val withWordBoundaries = new Formatter[String] {
+  val withWordBoundaries: Formatter = new Formatter {
     override val space = " "
 
     private def breakLine(w: Int)(s: String) = {
@@ -36,7 +33,7 @@ object Formatter {
           .map(_.padTo(w, ' '))
   }
 
-  val basic = new Formatter[String] {
+  val basic: Formatter = new Formatter {
     override val space = " "
     override def apply(s: String)(w: Int): List[String] =
       if (w == 0) Nil
@@ -45,5 +42,4 @@ object Formatter {
           .toList
           .flatMap(_.grouped(w).toList.map(_.padTo(w, ' ')))
   }
-
 }

@@ -17,9 +17,8 @@ libraryDependencies += "astrac" %% "box-tables" % "0.x.y"
 ## Simple example
 
 ```scala
-import astrac.boxtables.{AutoRow, Cell, Row, Spacing, Sizing}
-import astrac.boxtables.string.{Tables, Themes}
-import astrac.boxtables.instances.all._
+import astrac.boxtables.string._
+import astrac.boxtables.string.instances._
 import cats.instances.list._
 import cats.instances.string._
 
@@ -93,41 +92,44 @@ Any cell value is valid as long as it implements the `Cell` typeclass:
 ```scala
 package astrac.boxtables
 
-trait Cell[A] {
-  def content(a: A): String
+trait GenericCell[Primitive, Model] {
+  def content(a: Model): Primitive
 }
 ```
 
-Primitive, datetime and option instances are defined in the package
-`astrac.boxtables.instances` and are not available by default so they must be
-explicitly imported.
+Primitive, datetime and option instances for `String` as a primitive type are
+defined in `astrac.boxtables.string.instances` and are not available by default
+so they must be explicitly imported.
 
 ## Rows
 
 Any type can be represented as a row of a table as long as there is in scope an
-instance of the `Row` typeclass:
+instance of the `GenericRow` typeclass:
 
 ```scala
-sealed trait Row[A] {
+package astrac.boxtables
+
+sealed trait GenericRow[Primitive, Model] {
   def size: Int
-  def toRow(in: A): List[String]
+  def toRow(in: A): List[Primitive]
 }
 ```
 
-It is possible to create instances in several ways:
+The `string` subpackage provides a `Row` alias that is specialised on `String`
+as a primitive type; it is possible to create instances in several ways:
 
 ```scala
-import astrac.boxtables.{AutoRow, Row}
-import astrac.boxtables.instances.primitive._
+import astrac.boxtables.string.{AutoRow, Row}
+import astrac.boxtables.string.primitives._
 import shapeless.Sized
 
 case class Foo(x: String, y: Int)
 
 // Sized list instance (uses shapeless.Sized to ensure safety)
-val rowFoo: Row[Foo] = Row.instance(foo => Sized[List](foo.x, foo.y.toString))
+val rowFoo1: Row[Foo] = Row.instance(foo => Sized[List](foo.x, foo.y.toString))
 
 // Shapeless auto-derivation for case-classes
-val rowFoo: Row[Foo] = AutoRow[Row]
+val rowFoo2: Row[Foo] = AutoRow[Foo]
 
 // Lifting a (implicit) `Cell` instance into a single-column `Row`
 val rowString: Row[String] = Row.cell
@@ -138,6 +140,10 @@ functions like `contramap` and `contramapN` to create new instances from already
 existing ones; for example:
 
 ```scala
+// Uses also the imports in the example above
+import cats.syntax.contravariant._
+import cats.syntax.contravariantSemigroupal._
+
 // Using contramap to create a `Row` instance for a value-class
 case class Bar(x: String) extends AnyVal
 val rowBar = Row.cell[String].contramap[Bar](_.x)
@@ -153,7 +159,8 @@ Finally it is also possible to enable full automatic derivation for tuples and
 case classes:
 
 ```scala
-import astarc.boxtables.AutoRow.instances._
+import astarc.boxtables.string._
+import astarc.boxtables.string.fullAuto._
 
 val data: List[SomeCaseClass] = ...
 
@@ -205,15 +212,15 @@ This is the definition of a `Formatter`:
 ```scala
 trait Formatter[Primitive] {
   def space: Primitive
-  def apply(w: Int)(s: String): List[Primitive]
+  def apply(w: Int)(s: Primitive): List[Primitive]
 }
 ```
 
-The purpose of the formatter is to bridge from the `String` values extracted by
-the `Row` typeclass and the internal representation of the algebra. The `space`
-function returns a single blank space and `apply` formats a single `String` in a
-`List` of the target representation. This is where contents that are too long to
-fit in one cell are split into multiple lines.
+The purpose of the formatter is to adapt the values extracted from the `Row`
+typeclass to what is needed by the table algebra when it creates a cell. The
+`space` function returns a single blank space and `apply` formats a single
+`String` in a `List` of the target representation. This is where contents that
+are too long to fit in one cell are split into multiple lines.
 
 Formatters are provided when running algebra operations and when calling
 functions in the `Tables` object; two formatters have been implemented so
@@ -276,9 +283,21 @@ On the REPL:
 ## The `string` package
 
 The `astrac.boxtables.string` package defines specialised implementations of the
-table components when the primitive type is a simple string. The `Themes` object
-contains the definition of a few themes and the `Tables` object exposes the
-following functions:
+table components when the primitive type is a simple string. There are also aliases
+to some components in the base package for ease of importing:
+
+```
+import astrac.boxtables.string._
+import astrac.boxtables.string.fullAuto._
+import cats.implicits._
+```
+
+These imports provide the types, the cell instances and full automatic
+derivation for `Row` instances and should allow you to create tables from
+your data types with zero additional costs.
+
+The `Themes` object contains the definition of a few themes and the `Tables`
+object exposes the following functions:
 
 - `simple` - A table with no headers or footers
 - `withHeader`
@@ -300,10 +319,8 @@ columns for a 80 characters wide table. This is an example of usage:
 
 ```scala
 import astrac.boxtables.string.Tables
-import astrac.boxtables.instances.all._
-import astrac.boxtables.AutoRow.instances._
-import cats.instances.list._
-import cats.instances.string._
+import astrac.boxtables.string.fullAuto._
+import cats.implicits._
 
 case class Book(title: String, author: String)
 
