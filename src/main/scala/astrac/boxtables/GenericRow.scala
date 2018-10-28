@@ -5,8 +5,14 @@ import cats.syntax.contravariant._
 
 sealed trait GenericRow[Primitive, Model] {
   def cells: List[GenericCell[Primitive, Model]]
-  def contents(model: Model): List[Primitive] = cells.map(_.content(model))
   lazy val columns: Int = cells.size
+
+  def format(f: GenericFormatter[Primitive]): GenericRow[Primitive, Model] =
+    GenericRow.instance(cells.map(_.format(f)))
+
+  def formatByIndex(
+      f: Int => GenericFormatter[Primitive]): GenericRow[Primitive, Model] =
+    GenericRow.instance(cells.zipWithIndex.map(ci => ci._1.format(f(ci._2))))
 }
 
 object GenericRow {

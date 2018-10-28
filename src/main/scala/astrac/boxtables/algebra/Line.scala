@@ -10,24 +10,25 @@ import cats.syntax.traverse._
 import Sizing._
 
 trait Line[Primitive, Model] {
+  implicit val PrimitiveSupport: PrimitiveSupport[Primitive]
   implicit def Primitive: Monoid[Primitive]
   implicit def Model: GenericRow[Primitive, Model]
 
-  val formatter: Rows[Primitive, GenericFormatter[Primitive]] = Rows.formatter
+  import PrimitiveSupport._
+
   val sizing: Rows[Primitive, Sizing] = Rows.sizing
   val theme: Rows[Primitive, Theme[Primitive]] = Rows.theme
 
   def transpose(
-      ls: List[List[Primitive]]): Rows[Primitive, List[List[Primitive]]] =
-    formatter.flatMap { f =>
-      val w = ls.map(_.size).max
-      ls.zipWithIndex
-        .traverse {
-          case (l, i) =>
-            cellWidth(i).map(cw => l.padTo(w, Primitive.combineN(f.space, cw)))
-        }
-        .map(_.transpose)
-    }
+      ls: List[List[Primitive]]): Rows[Primitive, List[List[Primitive]]] = {
+    val w = ls.map(_.size).max
+    ls.zipWithIndex
+      .traverse {
+        case (l, i) =>
+          cellWidth(i).map(cw => l.padTo(w, Primitive.combineN(space, cw)))
+      }
+      .map(_.transpose)
+  }
 
   def boundedSpace(w: Int): Rows[Primitive, Int] = theme.map { t =>
     math.max(0,
@@ -118,29 +119,26 @@ trait Line[Primitive, Model] {
       .flatMap(identity)
 
   def contentLine(contents: List[Primitive]): Rows[Primitive, Primitive] =
-    for {
-      t <- theme
-      f <- formatter
-      l <- line(t.margins.fill.l,
-                t.borders.l,
-                t.padding.fill.l,
-                contents,
-                t.dividers.v.getOrElse(f.space),
-                t.padding.fill.r,
-                t.borders.r,
-                t.margins.fill.r)
-    } yield l
+    theme.flatMap { t =>
+      line(t.margins.fill.l,
+           t.borders.l,
+           t.padding.fill.l,
+           contents,
+           t.dividers.v.getOrElse(space),
+           t.padding.fill.r,
+           t.borders.r,
+           t.margins.fill.r)
+    }
 
   def paddingLine(p: Primitive): Rows[Primitive, Primitive] =
     for {
       t <- theme
       cs <- fillCells(p)
-      f <- formatter
       l <- line(t.margins.fill.l,
                 t.borders.l,
                 p,
                 cs,
-                t.dividers.v.getOrElse(f.space),
+                t.dividers.v.getOrElse(space),
                 p,
                 t.borders.r,
                 t.margins.fill.r)

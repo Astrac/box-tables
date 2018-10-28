@@ -57,4 +57,8 @@ object GenericAutoRow {
 
   def derive[Primitive, Model](implicit r: GenericAutoRow[Primitive, Model])
     : GenericRow[Primitive, Model] = apply
+
+  def formatted[Primitive, Model](f: GenericFormatter[Primitive])(
+      implicit r: GenericAutoRow[Primitive, Model])
+    : GenericRow[Primitive, Model] = derive[Primitive, Model].format(f)
 }

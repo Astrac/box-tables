@@ -45,18 +45,15 @@ trait Table[Primitive, Model] extends Line[Primitive, Model] {
       List.fill(t.padding.space.b)(paddingLine(t.padding.fill.b)).sequence
   }
 
-  def row(model: Model): Rows[Primitive, List[Primitive]] = formatter.flatMap {
-    f =>
-      val contents = Model.contents(model)
+  def row(model: Model): Rows[Primitive, List[Primitive]] = {
+    val contentLines = Model.cells.zipWithIndex
+      .traverse {
+        case (c, i) => cellWidth(i).map(c.formatter(c.content(model)))
+      }
+      .flatMap(transpose)
+      .flatMap(_.traverse(contentLine))
 
-      val contentLines = contents.zipWithIndex
-        .traverse {
-          case (c, i) => cellWidth(i).map(f(c))
-        }
-        .flatMap(transpose)
-        .flatMap(_.traverse(contentLine))
-
-      paddingTop |+| contentLines |+| paddingBottom
+    paddingTop |+| contentLines |+| paddingBottom
   }
 
   lazy val tableStart = topMargin |+| topBorder
@@ -78,8 +75,10 @@ trait Table[Primitive, Model] extends Line[Primitive, Model] {
 object Table {
   implicit def instance[Primitive, Model](
       implicit monoid: Monoid[Primitive],
-      modelRow: GenericRow[Primitive, Model]): Table[Primitive, Model] =
+      modelRow: GenericRow[Primitive, Model],
+      support: PrimitiveSupport[Primitive]): Table[Primitive, Model] =
     new Table[Primitive, Model] {
+      implicit val PrimitiveSupport = support
       implicit val Primitive = monoid
       implicit val Model = modelRow
     }

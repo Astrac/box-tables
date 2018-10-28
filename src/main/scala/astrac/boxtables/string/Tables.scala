@@ -8,13 +8,12 @@ object Tables {
 
   def simple[F[_]: Foldable, Model](data: F[Model],
                                     sizing: Sizing,
-                                    theme: Theme[String],
-                                    formatter: Formatter = Formatter.basic)(
+                                    theme: Theme[String])(
       implicit algebra: Table[String, Model]
   ): String =
     Templates
       .simple(data)
-      .run(TableConfig(RowsConfig(theme, sizing, formatter)))
+      .run(TableConfig(RowsConfig(theme, sizing)))
       .mkString("\n")
 
   def withHeader[F[_]: Foldable, Header, Model](
@@ -64,9 +63,8 @@ object Tables {
     withHeader(
       h,
       as,
-      TableConfig[String](
-        main = RowsConfig(Themes.markdownMain, sizing, Formatter.basic),
-        header =
-          Some(RowsConfig(Themes.markdownHeader, sizing, Formatter.basic)))
+      TableConfig[String](main = RowsConfig(Themes.markdownMain, sizing),
+                          header =
+                            Some(RowsConfig(Themes.markdownHeader, sizing)))
     )
 }

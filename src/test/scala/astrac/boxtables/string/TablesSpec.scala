@@ -140,20 +140,20 @@ class TablesSpec extends Properties("Tables") {
             User("Billy Pilgrim", 20, false, Counters(5, 7)),
             User("Mandarax", 3, true, Counters(10, 0))
           ))
-        .run(RowsConfig(testTheme, Sizing.Equal(w), Formatter.basic))
+        .run(RowsConfig(testTheme, Sizing.Equal(w)))
 
       lines.forall(_.size == w)
     }
 
   property("TableWithWordBoundariesFormatter") = {
-    implicit val tupleRow: Row[(String, String, String)] = AutoRow.derive
+    implicit val tupleRow: Row[(String, String, String)] =
+      AutoRow.formatted(Formatter.withWordBoundaries)
 
     val tbl = Tables.simple(
       List.fill(2)(
         (Examples.loremIpsumShort, Examples.loremIpsum, Examples.loremIpsum)),
       Sizing.Weighted(60, List(2, 3, 4)),
-      Themes.singleLineAscii,
-      Formatter.withWordBoundaries
+      Themes.singleLineAscii
     )
 
     tbl == Examples.tableWordBoundariesFormatter

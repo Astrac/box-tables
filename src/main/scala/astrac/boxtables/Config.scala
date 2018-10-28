@@ -1,8 +1,6 @@
 package astrac.boxtables
 
-case class RowsConfig[Primitive](theme: Theme[Primitive],
-                                 sizing: Sizing,
-                                 formatter: GenericFormatter[Primitive])
+case class RowsConfig[Primitive](theme: Theme[Primitive], sizing: Sizing)
 
 case class TableConfig[Primitive](
     main: RowsConfig[Primitive],

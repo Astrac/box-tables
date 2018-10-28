@@ -5,8 +5,6 @@ trait Formatter extends GenericFormatter[String]
 
 object Formatter {
   val withWordBoundaries: Formatter = new Formatter {
-    override val space = " "
-
     private def breakLine(w: Int)(s: String) = {
       val (lines, last) = s
         .split(" ")
@@ -34,7 +32,6 @@ object Formatter {
   }
 
   val basic: Formatter = new Formatter {
-    override val space = " "
     override def apply(s: String)(w: Int): List[String] =
       if (w == 0) Nil
       else
