@@ -107,7 +107,7 @@ class TablesSpec extends Properties("Tables") {
     implicit val headerRow: Row[(String, String, String)] = AutoRow.derive
 
     implicit val userRow: Row[User] =
-      (Row.cell[String], Row.cell[Int], Row.cell[Boolean]).contramapN[User](u =>
+      (Row[String], Row[Int], Row[Boolean]).contramapN[User](u =>
         (u.name, u.age, u.active))
 
     Tables

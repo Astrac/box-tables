@@ -31,7 +31,7 @@ object GenericRow {
       override def toRow(in: Model) = f(in)
     }
 
-  def cell[Primitive, Model](
+  implicit def cellInstance[Primitive, Model](
       implicit c: GenericCell[Primitive, Model]): GenericRow[Primitive, Model] =
     GenericRow.instance(a =>
       Sized[List](GenericCell[Primitive, Model].content(a)))

@@ -20,7 +20,4 @@ object Row {
   def instance[Model, Size <: Nat](f: Model => Sized[List[String], Size])(
       implicit toInt: ToInt[Size]): Row[Model] =
     GenericRow.instance(f)
-
-  def cell[Model: Cell]: Row[Model] =
-    GenericRow.cell
 }

@@ -1,6 +1,6 @@
 package astrac.boxtables
 
-import astrac.boxtables.string.{Cell => SCell, Row => SRow}
+import astrac.boxtables.string._
 import astrac.boxtables.string.instances._
 import cats.kernel.Eq
 import cats.tests.CatsSuite
@@ -10,10 +10,10 @@ import org.scalacheck.{Arbitrary, Gen}
 class RowSpec extends CatsSuite {
   val equalitySamples = 100
 
-  implicit def arbitraryRowFromCell[A: SCell]: Arbitrary[SRow[A]] =
-    Arbitrary(Gen.const(SRow.cell[A]))
+  implicit def arbitraryRow[A: Row]: Arbitrary[Row[A]] =
+    Arbitrary(Gen.const(Row[A]))
 
-  implicit def eqRow[A: Arbitrary]: Eq[SRow[A]] = Eq.instance { (a, b) =>
+  implicit def eqRow[A: Arbitrary]: Eq[Row[A]] = Eq.instance { (a, b) =>
     Iterator
       .continually(Arbitrary.arbitrary[A].sample)
       .collect {
@@ -23,7 +23,7 @@ class RowSpec extends CatsSuite {
       .forall(e => a.toRow(e) == b.toRow(e))
   }
 
-  checkAll("SRow.ControvariantMonoidalLaws",
-           ContravariantMonoidalTests[SRow]
+  checkAll("Row.ControvariantMonoidalLaws",
+           ContravariantMonoidalTests[Row]
              .contravariantMonoidal[Int, String, Boolean])
 }
