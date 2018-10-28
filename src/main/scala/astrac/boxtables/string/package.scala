@@ -1,13 +1,14 @@
 package astrac.boxtables
 
 package object string {
-  type Cell[A] = GenericCell[String, A]
-  type AutoRow[A] = GenericAutoRow[String, A]
-  type Row[A] = GenericRow[String, A]
+  type Cell[A] = algebra.Cell[String, A]
+  type AutoRow[A] = algebra.AutoRow[String, A]
+  type Row[A] = algebra.Row[String, A]
+  type Formatter = algebra.Formatter[String]
   type Sizing = astrac.boxtables.Sizing
   val Sizing = astrac.boxtables.Sizing
 
-  val fullAuto = new Instances with GenericAutoRow.Instances {}
+  val fullAuto = new Instances with algebra.AutoRow.Instances {}
   val instances = new Instances {}
   val primitives = new Primitives {}
   val containers = new Containers {}

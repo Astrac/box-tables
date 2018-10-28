@@ -5,7 +5,7 @@ object Cell {
   def apply[Model: Cell]: Cell[Model] = implicitly
   def instance[Model](f: Model => String,
                       formatter: Formatter = Formatter.basic): Cell[Model] =
-    GenericCell.instance(f, formatter)
+    algebra.Cell.instance(f, formatter)
 }
 
 object AutoRow {
@@ -19,5 +19,5 @@ object Row {
   def apply[Model: Row]: Row[Model] = implicitly
 
   def instance[Model](cs: List[Cell[Model]]): Row[Model] =
-    GenericRow.instance(cs)
+    algebra.Row.instance(cs)
 }

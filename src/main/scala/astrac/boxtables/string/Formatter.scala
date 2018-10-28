@@ -1,8 +1,6 @@
 package astrac.boxtables
 package string
 
-trait Formatter extends GenericFormatter[String]
-
 object Formatter {
   val withWordBoundaries: Formatter = new Formatter {
     private def breakLine(w: Int)(s: String) = {

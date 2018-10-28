@@ -12,7 +12,7 @@ import Sizing._
 trait Line[Primitive, Model] {
   implicit val PrimitiveSupport: PrimitiveSupport[Primitive]
   implicit def Primitive: Monoid[Primitive]
-  implicit def Model: GenericRow[Primitive, Model]
+  implicit def Model: Row[Primitive, Model]
 
   import PrimitiveSupport._
 

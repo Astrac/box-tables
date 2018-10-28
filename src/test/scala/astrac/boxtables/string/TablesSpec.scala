@@ -64,15 +64,7 @@ class TablesSpec extends Properties("Tables") {
     def makeTable(size: Int) =
       Tables.simple(data, Sizing.Equal(size), testTheme)
 
-    discard(t80)
-    discard(t120)
-
-    if (makeTable(45) != t45) {
-      println(makeTable(45))
-      println(t45)
-    }
-
-    makeTable(45) == t45 // && makeTable(80) == t80 && makeTable(120) == t120
+    makeTable(45) == t45 && makeTable(80) == t80 && makeTable(120) == t120
   }
 
   property("TestThemeWeightedSizing") = {

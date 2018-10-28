@@ -1,15 +1,16 @@
 package astrac.boxtables
+package algebra
 
 import cats.syntax.contravariant._
 import shapeless.ops.hlist.{At, ZipConst, ZipWithIndex}
 import shapeless.{Generic, HList, Nat, Poly1}
 import shapeless.ops.hlist.{LiftAll, Mapper, ToList}
 
-trait GenericAutoRow[Primitive, Model] {
-  def row: GenericRow[Primitive, Model]
+trait AutoRow[Primitive, Model] {
+  def row: Row[Primitive, Model]
 }
 
-object GenericAutoRow {
+object AutoRow {
 
   object mapper extends Poly1 {
     implicit def instance[Primitive,
@@ -18,7 +19,7 @@ object GenericAutoRow {
                           Index <: Nat,
                           Repr <: HList](
         implicit hlistAt: At.Aux[Repr, Index, Content]) =
-      at[((GenericCell[Primitive, Content], Index), Generic.Aux[Model, Repr])] {
+      at[((Cell[Primitive, Content], Index), Generic.Aux[Model, Repr])] {
         case ((cell, _), generic) =>
           cell.contramap[Model](m => generic.to(m).at[Index])
       }
@@ -32,33 +33,34 @@ object GenericAutoRow {
                         Args <: HList,
                         ContramappedCells <: HList](
       implicit generic: Generic.Aux[Model, Repr],
-      liftCells: LiftAll.Aux[GenericCell[Primitive, ?], Repr, Cells],
+      liftCells: LiftAll.Aux[Cell[Primitive, ?], Repr, Cells],
       indexed: ZipWithIndex.Aux[Cells, IndexedCells],
       withGeneric: ZipConst.Aux[Generic.Aux[Model, Repr], IndexedCells, Args],
       cellsContramapper: Mapper.Aux[mapper.type, Args, ContramappedCells],
-      toList: ToList[ContramappedCells, GenericCell[Primitive, Model]]
-  ): GenericAutoRow[Primitive, Model] =
-    new GenericAutoRow[Primitive, Model] {
-      override val row = GenericRow.instance(
+      toList: ToList[ContramappedCells, Cell[Primitive, Model]]
+  ): AutoRow[Primitive, Model] =
+    new AutoRow[Primitive, Model] {
+      override val row = Row.instance(
         liftCells.instances.zipWithIndex.zipConst(generic).map(mapper).toList)
     }
 
   trait Instances {
     implicit def rowInstance[Primitive, Model](
-        implicit r: GenericAutoRow[Primitive, Model])
-      : GenericRow[Primitive, Model] =
-      GenericAutoRow[Primitive, Model]
+        implicit r: AutoRow[Primitive, Model]): Row[Primitive, Model] =
+      AutoRow[Primitive, Model]
   }
 
   object instances extends Instances
 
-  def apply[Primitive, Model](implicit r: GenericAutoRow[Primitive, Model])
-    : GenericRow[Primitive, Model] = r.row
+  def apply[Primitive, Model](
+      implicit r: AutoRow[Primitive, Model]): Row[Primitive, Model] =
+    r.row
 
-  def derive[Primitive, Model](implicit r: GenericAutoRow[Primitive, Model])
-    : GenericRow[Primitive, Model] = apply
+  def derive[Primitive, Model](
+      implicit r: AutoRow[Primitive, Model]): Row[Primitive, Model] =
+    apply
 
-  def formatted[Primitive, Model](f: GenericFormatter[Primitive])(
-      implicit r: GenericAutoRow[Primitive, Model])
-    : GenericRow[Primitive, Model] = derive[Primitive, Model].format(f)
+  def formatted[Primitive, Model](f: Formatter[Primitive])(
+      implicit r: AutoRow[Primitive, Model]): Row[Primitive, Model] =
+    derive[Primitive, Model].format(f)
 }
