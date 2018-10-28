@@ -47,7 +47,7 @@ trait Table[Primitive, Model] extends Line[Primitive, Model] {
 
   def row(model: Model): Rows[Primitive, List[Primitive]] = formatter.flatMap {
     f =>
-      val contents = Model.toRow(model)
+      val contents = Model.contents(model)
 
       val contentLines = contents.zipWithIndex
         .traverse {

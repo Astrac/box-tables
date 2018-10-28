@@ -32,9 +32,9 @@ trait Line[Primitive, Model] {
   def boundedSpace(w: Int): Rows[Primitive, Int] = theme.map { t =>
     math.max(0,
              w - 2 -
-               (Model.size - 1) -
-               (t.padding.space.l * Model.size) -
-               (t.padding.space.r * Model.size) -
+               (Model.columns - 1) -
+               (t.padding.space.l * Model.columns) -
+               (t.padding.space.r * Model.columns) -
                t.margins.space.l -
                t.margins.space.r)
   }
@@ -48,13 +48,13 @@ trait Line[Primitive, Model] {
   def cellWidth(idx: Int): Rows[Primitive, Int] =
     (sizing, cellSpace).mapN[Int] { (sizing, cellSpace) =>
       val base = sizing match {
-        case Equal(_)            => cellSpace / Model.size
+        case Equal(_)            => cellSpace / Model.columns
         case Fixed(cs)           => cs(idx)
         case w @ Weighted(_, ws) => cellSpace / w.sum * ws(idx)
       }
 
       val rounding = sizing match {
-        case Equal(_) if idx < cellSpace % Model.size      => 1
+        case Equal(_) if idx < cellSpace % Model.columns   => 1
         case w @ Weighted(_, _) if idx < cellSpace % w.sum => 1
         case _                                             => 0
       }
@@ -69,7 +69,7 @@ trait Line[Primitive, Model] {
       val body = Primitive.combineN(paddingL, t.padding.space.l) |+| content
       val pr = Primitive.combineN(paddingR, t.padding.space.r)
 
-      if (index == Model.size - 1) body |+| pr
+      if (index == Model.columns - 1) body |+| pr
       else body |+| pr |+| rowsDivider
     }
 
@@ -94,7 +94,7 @@ trait Line[Primitive, Model] {
   }
 
   def fillCells(f: Primitive): Rows[Primitive, List[Primitive]] =
-    (0 until Model.size).toList
+    (0 until Model.columns).toList
       .traverse(idx => cellWidth(idx).map(cw => Primitive.combineN(f, cw)))
 
   def marginLine(f: Primitive): Rows[Primitive, Primitive] =

@@ -20,7 +20,7 @@ class RowSpec extends CatsSuite {
         case Some(v) => v
       }
       .take(equalitySamples)
-      .forall(e => a.toRow(e) == b.toRow(e))
+      .forall(e => a.contents(e) == b.contents(e))
   }
 
   checkAll("Row.ControvariantMonoidalLaws",
