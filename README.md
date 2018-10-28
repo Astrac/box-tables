@@ -91,8 +91,9 @@ Any cell value is valid as long as it implements the `Cell` typeclass:
 
 ```scala
 package astrac.boxtables
+package algebra
 
-trait GenericCell[Primitive, Model] {
+trait Cell[Primitive, Model] {
   def content(a: Model): Primitive
 }
 ```
@@ -104,14 +105,15 @@ so they must be explicitly imported.
 ## Rows
 
 Any type can be represented as a row of a table as long as there is in scope an
-instance of the `GenericRow` typeclass:
+instance of the `Row` typeclass:
 
 ```scala
 package astrac.boxtables
+package algebra
 
-sealed trait GenericRow[Primitive, Model] {
+sealed trait Row[Primitive, Model] {
   def size: Int
-  def toRow(in: A): List[Primitive]
+  def toRow(in: Model): List[Primitive]
 }
 ```
 
@@ -121,18 +123,14 @@ as a primitive type; it is possible to create instances in several ways:
 ```scala
 import astrac.boxtables.string.{AutoRow, Row}
 import astrac.boxtables.string.primitives._
-import shapeless.Sized
 
 case class Foo(x: String, y: Int)
 
-// Sized list instance (uses shapeless.Sized to ensure safety)
-val rowFoo1: Row[Foo] = Row.instance(foo => Sized[List](foo.x, foo.y.toString))
+// Lifting a (implicit) `Cell` instance into a single-column `Row`
+val stringRow: Row[String] = Row[String]
 
 // Shapeless auto-derivation for case-classes
-val rowFoo2: Row[Foo] = AutoRow[Foo]
-
-// Lifting a (implicit) `Cell` instance into a single-column `Row`
-val rowString: Row[String] = Row.cell
+val shapelessRow: Row[Foo] = AutoRow[Foo]
 ```
 
 `Row` is also a `cats.ContravariantMonoidal` and hence it is possible to use
@@ -146,11 +144,11 @@ import cats.syntax.contravariantSemigroupal._
 
 // Using contramap to create a `Row` instance for a value-class
 case class Bar(x: String) extends AnyVal
-val rowBar = Row.cell[String].contramap[Bar](_.x)
+val rowBar = Row[String].contramap[Bar](_.x)
 
 // Using contramapN to create a `Row` instance for a case class with derived fields
 val rowFoo: Row[Foo] =
-  (Row.cell[String], Row.cell[Int], Row.cell[Boolean]).contramapN[Foo] { foo =>
+  (Row[String], Row[Int], Row[Boolean]).contramapN[Foo] { foo =>
     (foo.x, foo.y, foo.y > 0)
   }
 ```
@@ -161,6 +159,7 @@ case classes:
 ```scala
 import astarc.boxtables.string._
 import astarc.boxtables.string.fullAuto._
+import cats.implicits._
 
 val data: List[SomeCaseClass] = ...
 
@@ -211,46 +210,76 @@ This is the definition of a `Formatter`:
 
 ```scala
 trait Formatter[Primitive] {
-  def space: Primitive
   def apply(w: Int)(s: Primitive): List[Primitive]
 }
 ```
 
 The purpose of the formatter is to adapt the values extracted from the `Row`
 typeclass to what is needed by the table algebra when it creates a cell. The
-`space` function returns a single blank space and `apply` formats a single
-`String` in a `List` of the target representation. This is where contents that
-are too long to fit in one cell are split into multiple lines.
+`apply` function formats a single `Primitive` in a `List` of lines of the
+desired width, opportunely padding the line if the content is shorter.
 
-Formatters are provided when running algebra operations and when calling
-functions in the `Tables` object; two formatters have been implemented so
-far and they can only be applied to the table as a whole:
+Formatters can be attached to any `Row` instance in several ways:
 
-* `Formatter.basic` - Simply breaks the string so that it fits the space
-* `Formatter.withWordBoundaries` - Simple algorithm that preserves words
+```
+import astrac.boxtables.string._
+import astrac.boxtables.string.instances._
+
+// Apply the same formatter to all cells in a row
+val row: Row[SomeType] = ...
+val centered = row.format(Formatter.centerAlign)
+
+// Derive an instance for a row with a provided formatter
+val row: Row[SomeCaseClass] = AutoRow.formatted(Formatter.centerAlign)
+
+// Apply formatters by index
+// WARNING - non exaustive match can result in exceptions
+val row: Row[SomeType] = ...
+val formatted = row.formatByIndex {
+  case 0 => Formatter.rightAlign
+  case 1 => Formatter.centerAlign
+  case _ => Formatter.leftAlign
+}
+
+// Use ContravariantMonoidal to build a row bottom-up with custom formatters
+val row: Row[(String, String, String)] = (
+    Row[String].format(Formatter.leftAlign),
+    Row[String].format(Formatter.centerAlign),
+    Row[String].format(Formatter.rightAlign)
+  ).tupled
+```
 
 The default formatter when calling functions in the `Tables` object is `basic`;
-this is an example of using the `withWordBoundaries` formatter:
+the `basic` formatter won't do any word wrapping and will simply break the string
+in chunks of the desired sizes, padding the last one when necessary.
+
+This is an example of the various provided formatters:
 
 ```scala
-import astrac.boxtables.{Formatter, Sizing}
-import astrac.boxtables.string.{Tables, Themes}
-import astrac.boxtables.instances.all._
-import astrac.boxtables.AutoRow.instances._
-import cats.instances.list._
-import cats.instances.string._
+import astrac.boxtables.string._
+import astrac.boxtables.string.instances._
+import cats.implicits._
 
 val loremIpsum =
   """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam
     |id molestie erat. Duis auctor vestibulum lacus quis ultrices.
     |""".stripMargin.replace("\n", " ")
 
+implicit val row = (
+    Row[String].format(Formatter.basic),
+    Row[String].format(Formatter.leftAlign),
+    Row[String].format(Formatter.centerAlign),
+    Row[String].format(Formatter.rightAlign)
+  ).tupled
+
 println(
   Tables.simple(
-    List.((loremIpsum, loremIpsum), (loremIpsum, loremIpsum)),
-    Sizing.Weighted(80, List(1, 3)),
-    Themes.blankCompact,
-    Formatter.withWordBoundaries
+    List(
+      ("basic", "left", "center", "right"),
+      (loremIpsum, loremIpsum, loremIpsum, loremIpsum)
+    ),
+    Sizing.Equal(80),
+    Themes.blankCompact
   )
 )
 ```
@@ -261,23 +290,16 @@ On the REPL:
 // Exiting paste mode, now interpreting.
 
 
- Lorem ipsum dolor    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
- sit amet,            Nullam id molestie erat. Duis auctor vestibulum lacus
- consectetur          quis ultrices.
- adipiscing elit.
- Nullam id molestie
- erat. Duis auctor
- vestibulum lacus
- quis ultrices.
+ basic               left                      center                     right
 
- Lorem ipsum dolor    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
- sit amet,            Nullam id molestie erat. Duis auctor vestibulum lacus
- consectetur          quis ultrices.
- adipiscing elit.
- Nullam id molestie
- erat. Duis auctor
- vestibulum lacus
- quis ultrices.
+ Lorem ipsum dolor s Lorem ipsum dolor    Lorem ipsum dolor   Lorem ipsum dolor
+ it amet, consectetu sit amet,                sit amet,               sit amet,
+ r adipiscing elit.  consectetur             consectetur            consectetur
+ Nullam id molestie  adipiscing elit.     adipiscing elit.     adipiscing elit.
+ erat. Duis auctor v Nullam id molestie  Nullam id molestie  Nullam id molestie
+ estibulum lacus qui erat. Duis auctor    erat. Duis auctor   erat. Duis auctor
+ s ultrices.         vestibulum lacus     vestibulum lacus     vestibulum lacus
+                     quis ultrices.        quis ultrices.        quis ultrices.
 ```
 
 ## The `string` package
