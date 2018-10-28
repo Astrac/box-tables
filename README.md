@@ -221,7 +221,7 @@ desired width, opportunely padding the line if the content is shorter.
 
 Formatters can be attached to any `Row` instance in several ways:
 
-```
+```scala
 import astrac.boxtables.string._
 import astrac.boxtables.string.instances._
 
@@ -308,7 +308,7 @@ The `astrac.boxtables.string` package defines specialised implementations of the
 table components when the primitive type is a simple string. There are also aliases
 to some components in the base package for ease of importing:
 
-```
+```scala
 import astrac.boxtables.string._
 import astrac.boxtables.string.fullAuto._
 import cats.implicits._
