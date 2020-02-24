@@ -3,12 +3,13 @@ package string
 
 import cats.syntax.list._
 import org.scalacheck.{Gen, Prop, Properties}
-import org.scalacheck.Prop.BooleanOperators
+import org.scalacheck.Prop.propBoolean
 
 class FormatterSpec extends Properties("Formatter") {
 
-  def checkFormatters(fs: Formatter*)(
-      invariant: (Int, String, List[String]) => Prop): Prop = {
+  def checkFormatters(
+      fs: Formatter*
+  )(invariant: (Int, String, List[String]) => Prop): Prop = {
     def wordGen(cellWidth: Int) =
       for {
         length <- Gen.choose(cellWidth / 4, cellWidth * 3 / 2)
@@ -29,10 +30,12 @@ class FormatterSpec extends Properties("Formatter") {
     }
   }
 
-  property("Invariants") = checkFormatters(Formatter.basic,
-                                           Formatter.leftAlign,
-                                           Formatter.centerAlign,
-                                           Formatter.rightAlign) { (w, _, ls) =>
+  property("Invariants") = checkFormatters(
+    Formatter.basic,
+    Formatter.leftAlign,
+    Formatter.centerAlign,
+    Formatter.rightAlign
+  ) { (w, _, ls) =>
     // println(w)
     // println(in)
     // println("*" * 80)
@@ -43,11 +46,12 @@ class FormatterSpec extends Properties("Formatter") {
     ("Respects size constraints" |: ls.forall(_.size == w)) &&
     ("Not break lines unnecessarily" |:
       ls.toNel.fold(true)(
-      ls =>
-        ls.toList
-          .zip(ls.tail)
-          .toNel
-          .fold(true)(_.forall(x => x._1.trim.size + x._2.trim.size + 1 > w))))
+        ls =>
+          ls.toList
+            .zip(ls.tail)
+            .toNel
+            .fold(true)(_.forall(x => x._1.trim.size + x._2.trim.size + 1 > w))
+      ))
 
   }
 
@@ -66,10 +70,10 @@ class FormatterSpec extends Properties("Formatter") {
       (
         "Has whitespaces distributed evenly on sides" |:
           ls.forall { l =>
-          val ls = l.takeWhile(_ == ' ').size
-          val rs = l.reverse.takeWhile(_ == ' ').size
-          ls >= rs - 1 && ls <= rs + 1
-        }
+            val ls = l.takeWhile(_ == ' ').size
+            val rs = l.reverse.takeWhile(_ == ' ').size
+            ls >= rs - 1 && ls <= rs + 1
+          }
       )
   }
 
